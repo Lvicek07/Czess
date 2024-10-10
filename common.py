@@ -95,11 +95,14 @@ def draw_piece(piece: chess.Piece, screen: pygame.Surface, pos: tuple[int, int],
     screen.blit(img, (pos[0]*SQUARE_SIZE, pos[1]*SQUARE_SIZE))
 
 def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player, Player], piece_images: Dict[str, pygame.Surface]):
+    img = pygame.image.load(f"assets/WhiteSquare.png")
     screen.fill(EGGSHELL)
     for row in range(ROWS):
         for col in range(COLS):
             if (row + col) % 2 == 1:
                 pygame.draw.rect(screen, MOSS_GREEN, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            else:
+                screen.blit(img, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
     
     if board.turn == chess.WHITE:
         if players[0].selected_piece:
@@ -148,8 +151,8 @@ def print_game_log(screen: pygame.Surface, font: pygame.font.Font, moves: tuple[
             n += 1
     
 
-WIDTH, HEIGHT   = 1200, 600
-SQUARE_SIZE     = 600 // 8
+WIDTH, HEIGHT   = 1200, 600 # 600 x 600 herní pole
+SQUARE_SIZE     = 600 // 8  # 75
 ROWS, COLS      = 8, 8
 WHITE           = (255, 255, 255)
 MOSS_GREEN      = (119, 149, 86)
