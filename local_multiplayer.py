@@ -7,11 +7,10 @@ from os import chdir
 from os.path import abspath, dirname
 from datetime import datetime
 
-def main():
+def main(current_date):
     global logger
     chdir(dirname(abspath(__file__)))
     logger = log.getLogger(__name__)
-    current_date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     log_filename = f"logs/log_{current_date}.log"
     log.basicConfig(filename=log_filename, filemode="a", level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
 
@@ -65,6 +64,7 @@ def main():
             if board.peek() != last_move:
                 last_move = board.peek()
                 moves.append(last_move)
+                print(type(node))
                 node = node.add_variation(last_move)
             print_game_log(screen, font, moves)
         except IndexError:
@@ -76,7 +76,8 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        current_date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        main(current_date)
         logger.info("Program exited")
     except Exception as e:
         logger.error(e)

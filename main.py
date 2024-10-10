@@ -11,7 +11,7 @@ class MainMenu:
     def __init__(self):
         self.options = ["Singleplayer", "Local Multiplayer", "LAN Multiplayer"]
         self.selected_option = 0
-        self.font = pygame.font.Font(None, 36)
+        self.font = pygame.font.Font(None, 42)
 
     def draw(self, screen):
         screen.fill(WHITE)  # Fill the background with white
@@ -74,20 +74,17 @@ def main():
                 raise SystemError("Singleplayer is not implemented")
                 
                 import singleplayer
-                singleplayer.main()
+                singleplayer.main(current_date)
                 run = False
             elif menu_result == 1:  # Local Multiplayer
                 logger.info("Starting local multiplayer session")
                 import local_multiplayer
-                local_multiplayer.main()
+                local_multiplayer.main(current_date)
                 run = False
             elif menu_result == 2:  # LAN Multiplayer
-                logger.info("Starting LAN multiplayer session")
-                print("LAN Multiplayer is not implemented")
-                raise SystemError("LAN Multiplayer is not implemented")
-                
-                import lan_multiplayer
-                lan_multiplayer.main()
+                logger.info("Starting LAN multiplayer session")                
+                import lan_multiplayer_menu
+                lan_multiplayer_menu.main(current_date)
                 run = False
 
         menu.draw(screen)
@@ -96,6 +93,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+        logger.info("Program exited")
     except Exception as e:
         logger.error(e)
         raise e
