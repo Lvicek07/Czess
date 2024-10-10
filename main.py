@@ -13,7 +13,7 @@ class MainMenu:
         self.selected_option = 0
         self.font = pygame.font.Font(None, 42)
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface):
         screen.fill(WHITE)  # Fill the background with white
         title_surface = self.font.render("Chess Game", True, FONT_COLOR)
         help_surface = self.font.render("Use arrow keys to select", True, FONT_COLOR)
