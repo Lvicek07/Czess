@@ -1,7 +1,9 @@
 import chess
+from keyboard import play
 import pygame
 from time import time
 from typing import Dict
+from pygame import Color
 
 class Player:
     def __init__(self, color: bool, board: chess.Board) -> None:
@@ -104,11 +106,23 @@ def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player
             row = 7 - chess.square_rank(players[0].selected_square)
             col = chess.square_file(players[0].selected_square)
             pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
+            legal_moves = [move for move in board.legal_moves if move.from_square == players[0].selected_square]
+            for move in legal_moves:
+                row = 7 - chess.square_rank(move.to_square)
+                col = chess.square_file(move.to_square)
+                pygame.draw.rect(screen, (128, 255, 128), (col * SQUARE_SIZE + SQUARE_SIZE//4, row * SQUARE_SIZE + SQUARE_SIZE//4, SQUARE_SIZE - SQUARE_SIZE//2, SQUARE_SIZE - SQUARE_SIZE//2))
     else:
         if players[1].selected_piece:
             row = 7 - chess.square_rank(players[1].selected_square)
             col = chess.square_file(players[1].selected_square)
             pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
+            legal_moves = [move for move in board.legal_moves if move.from_square == players[1].selected_square]
+            for move in legal_moves:
+                row = 7 - chess.square_rank(move.to_square)
+                col = chess.square_file(move.to_square)
+                pygame.draw.rect(screen, (128, 255, 128), (col * SQUARE_SIZE + SQUARE_SIZE//4, row * SQUARE_SIZE + SQUARE_SIZE//4, SQUARE_SIZE - SQUARE_SIZE//2, SQUARE_SIZE - SQUARE_SIZE//2))
 
     x = 0
     y = 0
@@ -123,12 +137,23 @@ def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player
             draw_piece(piece, screen, (x, y), piece_images)
             x += 1
 
+def print_game_log(screen: pygame.Surface, font: pygame.font.Font, moves: tuple[chess.Move, ...]):
+    if moves:
+        x = FONT_SIZE + 5
+        n = 1
+        for move in moves:
+            text = f"{n}. {move.uci()}"
+            screen.blit(font.render(text, True, FONT_COLOR), (610,x))
+            x += FONT_SIZE + 5
+            n += 1
+    
 
-WIDTH, HEIGHT   = 600, 650
-SQUARE_SIZE     = WIDTH // 8
+WIDTH, HEIGHT   = 1200, 600
+SQUARE_SIZE     = 600 // 8
 ROWS, COLS      = 8, 8
 WHITE           = (255, 255, 255)
 MOSS_GREEN      = (119, 149, 86)
 EGGSHELL        = (235, 236, 208)
 BLACK           = (0, 0, 0)
 FONT_COLOR      = BLACK
+FONT_SIZE       = 30

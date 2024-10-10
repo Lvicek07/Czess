@@ -2,8 +2,9 @@ import pygame
 import sys
 from common import *  # Assuming common.py contains necessary classes
 import logging as log
-from os import chdir
+from os import chdir, mkdir
 from os.path import abspath, dirname
+from os.path import isdir
 from datetime import datetime
 
 class MainMenu:
@@ -45,9 +46,11 @@ class MainMenu:
 def main():
     global logger
     chdir(dirname(abspath(__file__)))
+    if not isdir('logs'):
+        mkdir("logs")
     logger = log.getLogger(__name__)
     current_date = datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
-    log_filename = f"log_{current_date}.log"
+    log_filename = f"logs/log_{current_date}.log"
     log.basicConfig(filename=log_filename, filemode="a", level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
 
     pygame.init()
