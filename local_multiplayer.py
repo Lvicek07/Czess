@@ -53,7 +53,7 @@ def main(current_date):
 
             if board.outcome() != None:
                 print("Game ended: ", board.outcome())
-                game_state = f"Game ended: {board.outcome()}"
+                game_state = f"Game ended: {board.outcome().result}"
                 game_end = True
                 with open(f"game_log_{current_date}.pgn", "w") as pgn_file:
                     exporter = chess.pgn.FileExporter(pgn_file)

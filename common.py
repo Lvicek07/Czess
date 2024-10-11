@@ -1,9 +1,6 @@
 import chess
-from keyboard import play
 import pygame
-from time import time
 from typing import Dict
-from pygame import Color
 
 class Player:
     def __init__(self, color: bool, board: chess.Board) -> None:
@@ -74,15 +71,17 @@ def init_game():
     return board
 
 def load_images():
-    piece_images = {}
+    images = {}
     pieces = ["king", "queen", "rook", "bishop", "knight", "pawn"]
     colors = ["white", "black"]
     for piece in pieces:
         for color in colors:
             img = pygame.image.load(f"assets/{piece}/{color}.png")
             img = pygame.transform.scale(img, (SQUARE_SIZE, SQUARE_SIZE))
-            piece_images[f"{color}_{piece}"] = img
-    return piece_images
+            images[f"{color}_{piece}"] = img
+    images["white_square"] = pygame.image.load(f"assets/WhiteSquare.png")
+    images["black_square"] = pygame.image.load(f"assets/BlackSquare.png")
+    return images
 
 def draw_piece(piece: chess.Piece, screen: pygame.Surface, pos: tuple[int, int], piece_images: Dict[str, pygame.Surface]):
     color = get_color(piece.color)
@@ -94,38 +93,40 @@ def draw_piece(piece: chess.Piece, screen: pygame.Surface, pos: tuple[int, int],
 
     screen.blit(img, (pos[0]*SQUARE_SIZE, pos[1]*SQUARE_SIZE))
 
-def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player, Player], piece_images: Dict[str, pygame.Surface]):
-    img = pygame.image.load(f"assets/WhiteSquare.png")
+def draw_square_overlay(screen: pygame.Surface, row: int, col: int, images: Dict[str, pygame.Surface]):
+    if (row + col) % 2 == 1:
+        screen.blit(images["black_square"], (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+    else:
+        screen.blit(images["white_square"], (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+    pygame.draw.rect(screen, (128, 255, 128), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), width=15)
+
+def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player, Player], images: Dict[str, pygame.Surface]):
+    legal_moves = None
     screen.fill(EGGSHELL)
     for row in range(ROWS):
         for col in range(COLS):
             if (row + col) % 2 == 1:
-                pygame.draw.rect(screen, MOSS_GREEN, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+                screen.blit(images["black_square"], (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
             else:
-                screen.blit(img, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+                screen.blit(images["white_square"], (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
     
     if board.turn == chess.WHITE:
         if players[0].selected_piece:
             row = 7 - chess.square_rank(players[0].selected_square)
             col = chess.square_file(players[0].selected_square)
-            pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-
             legal_moves = [move for move in board.legal_moves if move.from_square == players[0].selected_square]
-            for move in legal_moves:
-                row = 7 - chess.square_rank(move.to_square)
-                col = chess.square_file(move.to_square)
-                pygame.draw.rect(screen, (128, 255, 128), (col * SQUARE_SIZE + SQUARE_SIZE//4, row * SQUARE_SIZE + SQUARE_SIZE//4, SQUARE_SIZE - SQUARE_SIZE//2, SQUARE_SIZE - SQUARE_SIZE//2))
     else:
         if players[1].selected_piece:
             row = 7 - chess.square_rank(players[1].selected_square)
             col = chess.square_file(players[1].selected_square)
-            pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-
             legal_moves = [move for move in board.legal_moves if move.from_square == players[1].selected_square]
-            for move in legal_moves:
-                row = 7 - chess.square_rank(move.to_square)
-                col = chess.square_file(move.to_square)
-                pygame.draw.rect(screen, (128, 255, 128), (col * SQUARE_SIZE + SQUARE_SIZE//4, row * SQUARE_SIZE + SQUARE_SIZE//4, SQUARE_SIZE - SQUARE_SIZE//2, SQUARE_SIZE - SQUARE_SIZE//2))
+
+    if legal_moves:    
+        pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+        for move in legal_moves:
+            row = 7 - chess.square_rank(move.to_square)
+            col = chess.square_file(move.to_square)
+            draw_square_overlay(screen, row, col, images)
 
     x = 0
     y = 0
@@ -137,7 +138,7 @@ def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player
             x += int(char)
         else:
             piece = chess.Piece.from_symbol(char)
-            draw_piece(piece, screen, (x, y), piece_images)
+            draw_piece(piece, screen, (x, y), images)
             x += 1
 
 def print_game_log(screen: pygame.Surface, font: pygame.font.Font, moves: tuple[chess.Move, ...]):
