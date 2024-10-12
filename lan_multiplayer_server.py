@@ -139,7 +139,7 @@ def main(current_date):
 
 if __name__ == "__main__":
     try:
-        current_date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        current_date = datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
         main(current_date)
         logger.info("Program exited")
     except Exception as e:
