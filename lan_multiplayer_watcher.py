@@ -2,21 +2,23 @@ import socket
 import pygame
 from common import *
 import logging as log
+import chess
+import chess.pgn
 from os import chdir
 from os.path import abspath, dirname
 from datetime import datetime
+import pickle
 
 # Server details
-SERVER_IP = '127.0.0.1'  # Change this to the server's IP address if needed
 PORT = 65432
 BUFFER_SIZE = 1024
 
-def connect_to_server():
+def connect_to_server(server_ip: str):
     """Connects to the chess server."""
-    watcher_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    watcher_socket.connect((SERVER_IP, PORT))
-    print(f"Connected to the server at {SERVER_IP}:{PORT}")
-    return watcher_socket
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((server_ip, PORT))
+    print(f"Connected to the server at {server_ip}:{PORT}")
+    return client_socket
 
 def main(current_date):
     global logger
@@ -25,22 +27,49 @@ def main(current_date):
     log_filename = f"logs/log_{current_date}.log"
     log.basicConfig(filename=log_filename, filemode="a", level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
 
-    logger.debug("Initializing LAN multiplayer watcher")
+    logger.debug("Initializing LAN multiplayer client")
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Chess - LAN multiplayer - watcher")
     board = init_game()
     clock = pygame.time.Clock()
 
     font = pygame.font.SysFont('consolas', FONT_SIZE)
     piece_images = load_images()
-    
+    game = chess.pgn.Game()
+    node = game
+
+    player_black = Player(chess.BLACK, board)
+    player_none = Player(chess.WHITE, board)
+
+    moves = list()
+    last_move = None
     run = True
     game_end = False
 
     # Connect to the server (Player 1)
-    watcher_socket = connect_to_server()
+    screen.fill(EGGSHELL)
+    title_surface = font.render(f"Waiting for IP", True, FONT_COLOR)
+    title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
+    screen.blit(title_surface, title_rect)
+    title_surface = font.render(f"Write the IP in console (10.1.1.0)", True, FONT_COLOR)
+    title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    screen.blit(title_surface, title_rect)
+    title_surface = font.render(f"Windows might report this app as not responding, DO NOT CLOSE", True, FONT_COLOR)
+    title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 1.2))
+    screen.blit(title_surface, title_rect)
+    pygame.display.flip()
 
-    logger.debug("Entering watcher loop")
+    SERVER_IP = input("IP: ")
+
+    client_socket = connect_to_server(SERVER_IP)
+    while True:
+        msg = client_socket.recv(1024) 
+        if msg.decode() == "sync":
+            break
+    client_socket.send(b"watch")
+
+    logger.debug("Entering game loop")
 
     while run:
         events = pygame.event.get()
@@ -50,31 +79,37 @@ def main(current_date):
                 run = False
 
         if not game_end:
-            # Wait for moves from the server
-            move_data = receive_move(watcher_socket)
-            if move_data is not None:
-                board.push(move_data)
-                print(f"Received move: {move_data}")
+            try:
+                data = client_socket.recv(4096)  # Receive data
+                board, moves = pickle.loads(data)  # Deserialize the data
+            except ValueError:
+                pass
 
-                if board.outcome() is not None:
-                    print("Game ended: ", board.outcome())
-                    game_end = True
+            draw_board(board, screen, (player_none, player_black), piece_images)  # Only player_black is active
 
-            draw_board(board, screen, (None, None), piece_images)  # No players are active
+            if board.outcome() is not None:
+                print("Game ended: ", board.outcome())
+                game_end = True
+                with open(f"game_log_{current_date}.pgn", "w") as pgn_file:
+                    exporter = chess.pgn.FileExporter(pgn_file)
+                    game.accept(exporter)
 
-        screen.blit(font.render(f"Spectator Mode", True, FONT_COLOR), (610, 0))
+        screen.blit(font.render(f"Turn: {'White' if board.turn == chess.WHITE else 'Black'}", True, FONT_COLOR), (610, 0))
+        
+        try:
+            if board.peek() != last_move:
+                last_move = board.peek()
+                moves.append(last_move)
+                node = node.add_variation(last_move)
+            print_game_log(screen, font, moves)
+        except IndexError:
+            screen.blit(font.render("No moves", True, FONT_COLOR), (610, FONT_SIZE + 5))
+
         pygame.display.update()  # Update the display
-        clock.tick(60)
+        clock.tick(25)
 
     # Close the connection when the game is over
-    watcher_socket.close()
-
-def receive_move(watcher_socket):
-    """Receives the move from the server."""
-    data = watcher_socket.recv(BUFFER_SIZE).decode()
-    if data:
-        return chess.Move.from_uci(data)
-    return None
+    client_socket.close()
 
 if __name__ == "__main__":
     try:

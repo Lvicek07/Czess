@@ -8,6 +8,7 @@ from os import chdir
 from os.path import abspath, dirname
 from datetime import datetime
 import pickle
+import pygame_textinput
 
 # Server details
 PORT = 65432
@@ -15,10 +16,10 @@ BUFFER_SIZE = 1024
 
 def connect_to_server(server_ip: str):
     """Connects to the chess server."""
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((server_ip, PORT))
+    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    conn.connect((server_ip, PORT))
     print(f"Connected to the server at {server_ip}:{PORT}")
-    return client_socket
+    return conn
 
 def main(current_date):
     global logger
@@ -48,29 +49,56 @@ def main(current_date):
     game_end = False
 
     # Connect to the server (Player 1)
-    screen.fill(EGGSHELL)
-    title_surface = font.render(f"Waiting for IP", True, FONT_COLOR)
-    title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
-    screen.blit(title_surface, title_rect)
-    title_surface = font.render(f"Write the IP in console (10.1.1.0)", True, FONT_COLOR)
-    title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-    screen.blit(title_surface, title_rect)
-    title_surface = font.render(f"Windows might report this app as not responding, DO NOT CLOSE", True, FONT_COLOR)
-    title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 1.2))
-    screen.blit(title_surface, title_rect)
-    pygame.display.flip()
 
-    SERVER_IP = input("IP: ")
+    textinput = pygame_textinput.TextInputVisualizer(font_object=font)
 
-    client_socket = connect_to_server(SERVER_IP)
+    run = True
+    while run:
+        screen.fill(EGGSHELL)
+        title_surface = font.render(f"Waiting for IP", True, FONT_COLOR)
+        title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
+        screen.blit(title_surface, title_rect)
+        title_surface = font.render(f"IP: ", True, FONT_COLOR)
+        title_rect = title_surface.get_rect(center=(WIDTH // 2-150, HEIGHT // 2))
+        screen.blit(title_surface, title_rect)
+
+        events = pygame.event.get()
+        mouse = pygame.mouse.get_pos() 
+        for event in events:
+            if event.type == pygame.QUIT:
+                logger.info("Exiting")
+                raise SystemExit
+            if event.type == pygame.MOUSEBUTTONDOWN: 
+                if WIDTH/2+ 150 <= mouse[0] <= WIDTH/2+140+ 150 and HEIGHT/2-18 <= mouse[1] <= HEIGHT/2+22: 
+                    SERVER_IP = textinput.value
+                    run = False
+        # Feed it with events every frame
+        textinput.update(events)
+        # Blit its surface onto the screen
+        screen.blit(textinput.surface, (WIDTH // 2-130, HEIGHT // 2-15))
+
+        if WIDTH/2+ 150 <= mouse[0] <= WIDTH/2+140+ 150 and HEIGHT/2-18 <= mouse[1] <= HEIGHT/2+22: 
+            pygame.draw.rect(screen, (170,170,170), [WIDTH/2 + 150, HEIGHT/2-18, 140, 40]) 
+            
+        else: 
+            pygame.draw.rect(screen, (100,100,100), [WIDTH/2 + 150, HEIGHT/2-18, 140, 40])
+
+        text = font.render('Connect' , True , FONT_COLOR)
+        screen.blit(text, text.get_rect(center=(WIDTH // 2 + 70 + 150, HEIGHT // 2))) 
+
+        pygame.display.update()
+        clock.tick(30)
+
+    conn = connect_to_server(SERVER_IP)
     while True:
-        msg = client_socket.recv(1024) 
+        msg = conn.recv(1024) 
         if msg.decode() == "sync":
             break
-    client_socket.send(b"sync")
+    conn.send(b"play")
 
     logger.debug("Entering game loop")
-
+    
+    run = True
     while run:
         events = pygame.event.get()
         for event in events:
@@ -82,11 +110,20 @@ def main(current_date):
             if board.turn == chess.BLACK:
                 player_black.on_move(board, events)
                 data = pickle.dumps((board, moves))  # Serialize the board and moves
-                client_socket.send(data)  # Send serialized data
+                try:
+                    conn.send(data)  # Send serialized data
+                except [ConnectionResetError, ConnectionAbortedError]:
+                    logger.info("Exiting")
+                    run = False
             else:
                 try:
-                    data = client_socket.recv(4096)  # Receive data
-                    board, moves = pickle.loads(data)  # Deserialize the data
+                    data = conn.recv(4096)  # Receive data
+                    if not data:
+                        logger.error("Received empty data")
+                        logger.info("Exiting")
+                        run = False
+                    else:
+                        board , moves = pickle.loads(data)  # Deserialize the data
                 except ValueError:
                     pass
 
@@ -111,10 +148,10 @@ def main(current_date):
             screen.blit(font.render("No moves", True, FONT_COLOR), (610, FONT_SIZE + 5))
 
         pygame.display.update()  # Update the display
-        clock.tick(25)
+        clock.tick(60)
 
     # Close the connection when the game is over
-    client_socket.close()
+    conn.close()
 
 if __name__ == "__main__":
     try:

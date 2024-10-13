@@ -62,9 +62,9 @@ def main(current_date):
             conn, addr = server_socket.accept()
             conn.send(b"sync")
             while True:
-               msg = conn.recv(1024) 
-               if msg.decode() == "sync":
-                   break
+                msg = conn.recv(1024) 
+                if msg.decode() == "play":
+                    break
             run = False
         except socket.timeout:
             pass  # Ignore the timeout and continue
@@ -101,12 +101,20 @@ def main(current_date):
             if board.turn == chess.WHITE:
                 player_white.on_move(board, events)
                 data = pickle.dumps((board, moves))  # Serialize the board and moves
-                conn.send(data)  # Send serialized data
+                try:
+                    conn.send(data)  # Send serialized data
+                except [ConnectionResetError, ConnectionAbortedError]:
+                    logger.info("Exiting")
+                    run = False
             else:
                 try:
                     data = conn.recv(4096)  # Receive data
-                    board, moves = pickle.loads(data)  # Deserialize the data
-                    #board = chess.Board(client_socket.recv(87).decode("ascii").split("\n")[0])
+                    if not data:
+                        logger.error("Received empty data")
+                        logger.info("Exiting")
+                        run = False
+                    else:
+                        board , moves = pickle.loads(data)  # Deserialize the data
                 except ValueError:
                     pass
 
@@ -131,7 +139,7 @@ def main(current_date):
             screen.blit(font.render("No moves", True, FONT_COLOR), (610, FONT_SIZE + 5))
 
         pygame.display.update()  # Update the display
-        clock.tick(25)
+        clock.tick(60)
 
     # Close the connection when the game is over
     conn.close()
