@@ -46,18 +46,9 @@ class LanMenu:
 
 def main(current_date):
     global logger
-    chdir(dirname(abspath(__file__)))
-    if not isdir('logs'):
-        mkdir("logs")
-    logger = log.getLogger(__name__)
-    log_filename = f"logs/log_{current_date}.log"
-    log.basicConfig(filename=log_filename, filemode="a", level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+    screen, board, logger, clock, images, game, node, font = init_game(current_date)
 
-    pygame.init()
-
-    logger.debug("Initializing main menu")
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption('Chess Game')
+    pygame.display.set_caption("Chess - LAN multiplayer")
 
     menu = LanMenu()
 

@@ -22,23 +22,9 @@ def get_ip_address():
 
 def main(current_date):
     global logger
-    chdir(dirname(abspath(__file__)))
-    logger = log.getLogger(__name__)
-    log_filename = f"logs/log_{current_date}.log"
-    log.basicConfig(filename=log_filename, filemode="a", level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+    screen, board, logger, clock, images, game, node, font = init_game(current_date)
 
-    logger.debug("Initializing LAN multiplayer server")
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Chess - LAN multiplayer - server")
-    board = init_game()
-    clock = pygame.time.Clock()
-
-    font = pygame.font.SysFont("consolas", FONT_SIZE)
-    menu_font = pygame.font.SysFont("consolas", 24)
-    piece_images = load_images()
-    game = chess.pgn.Game()
-    node = game
 
     player_white = Player(chess.WHITE, board)
     player_black = Player(chess.BLACK, board)
@@ -73,16 +59,16 @@ def main(current_date):
                 logger.info("Exiting")
                 raise SystemExit
         screen.fill(WHITE)
-        title_surface = menu_font.render(f"Server started, waiting for Player 2", True, FONT_COLOR)
+        title_surface = font.render(f"Server started, waiting for Player 2", True, FONT_COLOR)
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
         screen.blit(title_surface, title_rect)
-        title_surface = menu_font.render(f"IP: {get_ip_address()}", True, FONT_COLOR)
+        title_surface = font.render(f"IP: {get_ip_address()}", True, FONT_COLOR)
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 1.2))
         screen.blit(title_surface, title_rect)
         pygame.display.flip()
 
     screen.fill(WHITE)
-    title_surface = menu_font.render(f"Player 2 connected from {addr}", True, FONT_COLOR)
+    title_surface = font.render(f"Player 2 connected from {addr}", True, FONT_COLOR)
     title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
     screen.blit(title_surface, title_rect)
     pygame.display.flip()
@@ -118,7 +104,7 @@ def main(current_date):
                 except ValueError:
                     pass
 
-            draw_board(board, screen, (player_white, player_black), piece_images)
+            draw_board(board, screen, (player_white, player_black), images)
 
             if board.outcome() is not None:
                 print("Game ended: ", board.outcome())

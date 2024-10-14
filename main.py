@@ -66,13 +66,9 @@ def main():
     while run:
         events = pygame.event.get()
         menu_result = menu.handle_input(events)
-        
         if menu_result is not None:
             if menu_result == 0:  # Singleplayer
-                logger.info("Starting singleplayer session")
-                print("Singleplayer is not implemented")
-                raise SystemError("Singleplayer is not implemented")
-                
+                logger.info("Starting singleplayer session")            
                 import singleplayer
                 singleplayer.main(current_date)
                 run = False

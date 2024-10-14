@@ -9,21 +9,9 @@ from datetime import datetime
 
 def main(current_date):
     global logger
-    chdir(dirname(abspath(__file__)))
-    logger = log.getLogger(__name__)
-    log_filename = f"logs/log_{current_date}.log"
-    log.basicConfig(filename=log_filename, filemode="a", level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+    screen, board, logger, clock, images, game, node, font = init_game(current_date)
 
-    logger.debug("Initializing local multiplayer app")
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    board = init_game()
-    clock = pygame.time.Clock()
-
-    font = pygame.font.SysFont('consolas', FONT_SIZE)
-    piece_images = load_images()
-    game = chess.pgn.Game()
-    node = game
+    pygame.display.set_caption("Chess - local multiplayer")
 
     player_white = Player(chess.WHITE, board)
     player_black = Player(chess.BLACK, board)
@@ -49,7 +37,7 @@ def main(current_date):
                 player_black.on_move(board, events)
                 game_state = "On turn: Black"
             
-            draw_board(board, screen, (player_white, player_black), piece_images)
+            draw_board(board, screen, (player_white, player_black), images)
 
             if board.outcome() != None:
                 print("Game ended: ", board.outcome())

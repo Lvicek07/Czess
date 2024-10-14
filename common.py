@@ -1,11 +1,15 @@
 import chess
 import pygame
 from typing import Dict
+import random
+import logging as log
+import chess.pgn
+from os import chdir
+from os.path import abspath, dirname
 
 class Player:
     def __init__(self, color: bool, board: chess.Board) -> None:
         self.is_playing      = False
-        self.clicked_piece   = None
         self.color           = color
         self.selected_piece  = None
         self.selected_square = None
@@ -62,13 +66,136 @@ class Player:
                 else:
                     print("No piece found")
 
+class AI:
+    def __init__(self, color: bool, difficulty: str):
+        self.difficulty      = difficulty
+        self.is_playing      = False
+        self.color           = color
+        self.selected_piece  = None
+        self.selected_square = None
+        self.king            = chess.Piece(chess.KING,   color)
+        self.queen           = chess.Piece(chess.QUEEN,  color)
+        self.rook_1          = chess.Piece(chess.ROOK,   color)
+        self.rook_2          = chess.Piece(chess.ROOK,   color)
+        self.knight_1        = chess.Piece(chess.KNIGHT, color)
+        self.knight_2        = chess.Piece(chess.KNIGHT, color)
+        self.bishop_1        = chess.Piece(chess.BISHOP, color)
+        self.bishop_2        = chess.Piece(chess.BISHOP, color)
+        self.pawn_1          = chess.Piece(chess.PAWN,   color)
+        self.pawn_2          = chess.Piece(chess.PAWN,   color)
+        self.pawn_3          = chess.Piece(chess.PAWN,   color)
+        self.pawn_4          = chess.Piece(chess.PAWN,   color)
+        self.pawn_5          = chess.Piece(chess.PAWN,   color)
+        self.pawn_6          = chess.Piece(chess.PAWN,   color)
+        self.pawn_7          = chess.Piece(chess.PAWN,   color)
+        self.pawn_8          = chess.Piece(chess.PAWN,   color)
+        self.pieces          = [self.king, self.queen, self.rook_1, self.rook_2, self.knight_1, self.knight_2, self.bishop_1, self.bishop_2, self.pawn_1, self.pawn_2, self.pawn_3, self.pawn_4, self.pawn_5, self.pawn_6, self.pawn_7, self.pawn_8]
+
+    def on_move(self, board: chess.Board) -> chess.Move:
+        if self.difficulty == "easy":
+            move = self.easy_move(board)
+        elif self.difficulty == "medium":
+            move = self.medium_move(board)
+        elif self.difficulty == "hard":
+            move = self.hard_move(board)
+        elif self.difficulty == "Fales":
+            move = self.fales_move(board)
+        if move:
+            board.push(move)
+
+    def easy_move(self, board: chess.Board) -> chess.Move:
+        return random.choice(list(board.legal_moves))
+
+    def medium_move(self, board: chess.Board) -> chess.Move:
+        return random.choice(list(board.legal_moves))
+
+    def hard_move(self, board: chess.Board) -> chess.Move:
+        best_move = None
+        best_value = -9999
+
+        for move in board.legal_moves:
+            board.push(move)
+            board_value = self.evaluate_board(board)
+            board.pop()
+
+            if board_value > best_value:
+                best_value = board_value
+                best_move = move
+
+        return best_move
+
+    def fales_move(self, board: chess.Board) -> chess.Move:
+        best_move, _ = self.minimax(board, depth=3)
+        return best_move
+
+    def minimax(self, board: chess.Board, depth: int, maximizing_player: bool = True):
+        if depth == 0 or board.is_game_over():
+            return None, self.evaluate_board(board)
+
+        best_move = None
+        if maximizing_player:
+            best_value = -9999
+            for move in board.legal_moves:
+                board.push(move)
+                _, value = self.minimax(board, depth - 1, False)
+                board.pop()
+
+                if value > best_value:
+                    best_value = value
+                    best_move = move
+            return best_move, best_value
+        else:
+            best_value = 9999
+            for move in board.legal_moves:
+                board.push(move)
+                _, value = self.minimax(board, depth - 1, True)
+                board.pop()
+
+                if value < best_value:
+                    best_value = value
+                    best_move = move
+            return best_move, best_value
+
+    def evaluate_board(self, board: chess.Board) -> int:
+        if board.is_checkmate():
+            return 10000 if board.turn == chess.BLACK else -10000
+
+        piece_values = {
+            chess.PAWN: 1,
+            chess.KNIGHT: 3,
+            chess.BISHOP: 3,
+            chess.ROOK: 5,
+            chess.QUEEN: 9,
+            chess.KING: 0
+        }
+
+        value = 0
+        for piece in board.piece_map().values():
+            value += piece_values[piece.piece_type] if piece.color == chess.WHITE else -piece_values[piece.piece_type]
+
+        return value
+
 
 def get_color(color: bool):
     return "white" if color==True else "black"
     
-def init_game():
+def init_game(current_date):
+    chdir(dirname(abspath(__file__)))
+    logger = log.getLogger(__name__)
+    log_filename = f"logs/log_{current_date}.log"
+    log.basicConfig(filename=log_filename, filemode="a", level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+    logger.debug("Initializing app")
+
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     board = chess.Board()
-    return board
+    clock = pygame.time.Clock()
+
+    font = pygame.font.SysFont('consolas', FONT_SIZE)
+    images = load_images()
+    game = chess.pgn.Game()
+    node = game
+    return screen, board, logger, clock, images, game, node, font
 
 def load_images():
     images = {}
@@ -114,15 +241,16 @@ def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player
         if players[0].selected_piece:
             row = 7 - chess.square_rank(players[0].selected_square)
             col = chess.square_file(players[0].selected_square)
+            pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
             legal_moves = [move for move in board.legal_moves if move.from_square == players[0].selected_square]
     else:
         if players[1].selected_piece:
             row = 7 - chess.square_rank(players[1].selected_square)
             col = chess.square_file(players[1].selected_square)
+            pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
             legal_moves = [move for move in board.legal_moves if move.from_square == players[1].selected_square]
 
     if legal_moves:    
-        pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
         for move in legal_moves:
             row = 7 - chess.square_rank(move.to_square)
             col = chess.square_file(move.to_square)
@@ -150,6 +278,45 @@ def print_game_log(screen: pygame.Surface, font: pygame.font.Font, moves: tuple[
             screen.blit(font.render(text, True, FONT_COLOR), (610,x))
             x += FONT_SIZE + 5
             n += 1
+
+def game_loop(screen, logger, board, players, images, current_date, game, font, moves, clock                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ):
+    events = pygame.event.get()
+    for event in events:
+        if event.type == pygame.QUIT:
+            logger.info("Exiting")
+            run = False
+    if not game_end:
+        if board.turn == chess.WHITE:
+            game_state = "On turn: White"
+            player_white.on_move(board, events)
+        else:
+            game_state = "On turn: Black"
+            ai_black.on_move(board)
+                
+            
+        draw_board(board, screen, (player_white, ai_black), images)
+
+        if board.outcome() != None:
+            print("Game ended: ", board.outcome())
+            game_state = f"Game ended: {board.outcome().result}"
+            game_end = True
+            with open(f"game_log_{current_date}.pgn", "w") as pgn_file:
+                exporter = chess.pgn.FileExporter(pgn_file)
+                game.accept(exporter)
+
+    screen.blit(font.render(game_state, True, FONT_COLOR), (610,0))
+    try:
+        if board.peek() != last_move:
+            last_move = board.peek()
+            moves.append(last_move)
+            print(type(node))
+            node = node.add_variation(last_move)
+        print_game_log(screen, font, moves)
+    except IndexError:
+        screen.blit(font.render("No moves", True, FONT_COLOR), (610,FONT_SIZE+5))
+
+    pygame.display.update()  # Update the display
+    clock.tick(60)
     
 
 WIDTH, HEIGHT   = 1200, 600 # 600 x 600 herní pole

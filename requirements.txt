@@ -1,2 +1,3 @@
 pygame
 python-chess
+pygame_textinput

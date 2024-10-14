@@ -22,22 +22,9 @@ def connect_to_server(server_ip: str):
 
 def main(current_date):
     global logger
-    chdir(dirname(abspath(__file__)))
-    logger = log.getLogger(__name__)
-    log_filename = f"logs/log_{current_date}.log"
-    log.basicConfig(filename=log_filename, filemode="a", level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+    screen, board, logger, clock, images, game, node, font = init_game(current_date)
 
-    logger.debug("Initializing LAN multiplayer client")
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Chess - LAN multiplayer - watcher")
-    board = init_game()
-    clock = pygame.time.Clock()
-
-    font = pygame.font.SysFont('consolas', FONT_SIZE)
-    piece_images = load_images()
-    game = chess.pgn.Game()
-    node = game
 
     player_black = Player(chess.BLACK, board)
     player_none = Player(chess.WHITE, board)
@@ -85,7 +72,7 @@ def main(current_date):
             except ValueError:
                 pass
 
-            draw_board(board, screen, (player_none, player_black), piece_images)  # Only player_black is active
+            draw_board(board, screen, (player_none, player_black), images)  # Only player_black is active
 
             if board.outcome() is not None:
                 print("Game ended: ", board.outcome())
