@@ -1,10 +1,7 @@
 import pygame
 from common import *
-import logging as log
 import chess
 import chess.pgn
-from os import chdir
-from os.path import abspath, dirname
 from datetime import datetime
 
 def main(current_date):
@@ -13,8 +10,8 @@ def main(current_date):
 
     pygame.display.set_caption("Chess - local multiplayer")
 
-    player_white = Player(chess.WHITE, board)
-    player_black = Player(chess.BLACK, board)
+    player_white = Player(chess.WHITE)
+    player_black = Player(chess.BLACK)
 
     moves = list()
     last_move = None
@@ -70,3 +67,4 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(e)
         raise e
+    

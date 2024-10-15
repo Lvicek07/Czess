@@ -1,11 +1,8 @@
 import socket
 import pygame
 from common import *
-import logging as log
 import chess
 import chess.pgn
-from os import chdir
-from os.path import abspath, dirname
 from datetime import datetime
 import pickle
 
