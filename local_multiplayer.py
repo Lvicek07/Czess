@@ -24,7 +24,9 @@ def main(debug=False):
 
 if __name__ == "__main__":
     try:
-        main(debug=True)
+        debug = input("Enable debug mode? (y/n): ").strip().lower()
+        debug = True if debug == "y" else False
+        main(debug)
         logger.info("Program exited")
     except Exception as e:
         logger.error(e)

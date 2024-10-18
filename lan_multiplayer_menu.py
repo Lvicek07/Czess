@@ -1,11 +1,6 @@
 import pygame
 import sys
 from common import *  # Assuming common.py contains necessary classes
-import logging as log
-from os import chdir, mkdir
-from os.path import abspath, dirname
-from os.path import isdir
-from datetime import datetime
 
 class LanMenu:
     def __init__(self):
@@ -44,9 +39,9 @@ class LanMenu:
         return None  # No option selected
     
 
-def main(current_date):
+def main(debug=False):
     global logger
-    screen, board, logger, clock, images, game, node, font = init_game(current_date)
+    screen, _, logger, _, _, _ = init_game(debug)
 
     pygame.display.set_caption("Chess - LAN multiplayer")
 
@@ -63,13 +58,13 @@ def main(current_date):
                 logger.info("Starting server")
 
                 import lan_multiplayer_server as server
-                server.main(current_date)
+                server.main(debug)
                 run = False
             elif menu_result == 1:  # Local Multiplayer
                 logger.info("Starting local multiplayer session")
 
                 import lan_multiplayer_client as client
-                client.main(current_date)
+                client.main(debug)
                 run = False
 
         menu.draw(screen)
@@ -77,8 +72,9 @@ def main(current_date):
 
 if __name__ == "__main__":
     try:
-        current_date = datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
-        main(current_date)
+        debug = input("Enable debug mode? (y/n): ").strip().lower()
+        debug = True if debug == "y" else False
+        main(debug)
         logger.info("Program exited")
     except Exception as e:
         logger.error(e)

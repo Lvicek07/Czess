@@ -2,7 +2,6 @@ import pygame
 from common import *
 import chess
 import chess.pgn
-from datetime import datetime
 
 def draw_menu(screen: pygame.Surface):
     screen.fill((30, 30, 30))  # Dark background
@@ -18,12 +17,7 @@ def draw_menu(screen: pygame.Surface):
 
     pygame.display.flip()
 
-def main(current_date):
-    global logger
-    screen, board, logger, clock, images, game, node, font = init_game(current_date)
-
-    pygame.display.set_caption("Chess - single player")
-
+def selecting_difficulty(screen: pygame.Surface):
     selected_difficulty = None
     while selected_difficulty is None:
         draw_menu(screen)
@@ -38,61 +32,39 @@ def main(current_date):
                     index = (y - (HEIGHT // 2)) // 60
                     if 0 <= index < 4:
                         selected_difficulty = ["easy", "medium", "hard", "Fales"][index]
+    return selected_difficulty
 
-    player_white = Player(chess.WHITE)
-    ai_black = AI(chess.BLACK, selected_difficulty)
+def main(debug=False):
+    global logger
+    screen, board, logger, clock, images, font = init_game(debug)
 
-    moves = list()
-    last_move = None
-    run = True
-    game_end = False
+    pygame.display.set_caption("Chess - single player")
+
+    selected_difficulty = selecting_difficulty(screen)
 
     logger.debug("Entering game loop")
 
+    game = Game(screen, board, images, font)
+    game.players["black"] = AI(chess.BLACK, selected_difficulty)
+
+    run = True
     while run:
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
                 logger.info("Exiting")
                 run = False
-        if not game_end:
-            if board.turn == chess.WHITE:
-                game_state = "On turn: White"
-                player_white.on_move(board, events)
-            else:
-                game_state = "On turn: Black"
-                ai_black.on_move(board)
-                
-            
-            draw_board(board, screen, (player_white, ai_black), images)
 
-            if board.outcome() != None:
-                print("Game ended: ", board.outcome())
-                game_state = f"Game ended: {board.outcome().result}"
-                game_end = True
-                with open(f"game_log_{current_date}.pgn", "w") as pgn_file:
-                    exporter = chess.pgn.FileExporter(pgn_file)
-                    game.accept(exporter)
-
-        screen.blit(font.render(game_state, True, FONT_COLOR), (610,0))
-        try:
-            if board.peek() != last_move:
-                last_move = board.peek()
-                moves.append(last_move)
-                print(type(node))
-                node = node.add_variation(last_move)
-            print_game_log(screen, font, moves)
-        except IndexError:
-            screen.blit(font.render("No moves", True, FONT_COLOR), (610,FONT_SIZE+5))
-
+        game.loop(events)
         pygame.display.update()  # Update the display
         clock.tick(60)
 
 
 if __name__ == "__main__":
     try:
-        current_date = datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
-        main(current_date)
+        debug = input("Enable debug mode? (y/n): ").strip().lower()
+        debug = True if debug == "y" else False
+        main(debug)
         logger.info("Program exited")
     except Exception as e:
         logger.error(e)

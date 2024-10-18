@@ -18,24 +18,9 @@ def connect_to_server(server_ip: str):
     print(f"Connected to the server at {server_ip}:{PORT}")
     return conn
 
-def main(current_date):
-    global logger
-    screen, board, logger, clock, images, game, node, font = init_game(current_date)
-
-    pygame.display.set_caption("Chess - LAN multiplayer - client")
-
-    player_black = Player(chess.BLACK)
-    player_none = Player(chess.WHITE)
-
-    moves = list()
-    last_move = None
-    run = True
-    game_end = False
-
-    # Connect to the server (Player 1)
-
+def ip_input(screen, font):
     textinput = pygame_textinput.TextInputVisualizer(font_object=font)
-
+    clock = pygame.time.Clock()
     run = True
     while run:
         screen.fill(EGGSHELL)
@@ -72,6 +57,18 @@ def main(current_date):
 
         pygame.display.update()
         clock.tick(30)
+    return SERVER_IP
+
+
+def main(debug=False):
+    global logger
+    screen, board, logger, clock, images, font = init_game(debug)
+
+    pygame.display.set_caption("Chess - LAN multiplayer - client")
+
+    game = Game(screen, board, images, font)
+
+    SERVER_IP = ip_input(screen, font)
 
     conn = connect_to_server(SERVER_IP)
     while True:
@@ -90,10 +87,11 @@ def main(current_date):
                 logger.info("Exiting")
                 run = False
 
-        if not game_end:
+        game.loop(events)
+
+        if not game.game_end:
             if board.turn == chess.BLACK:
-                player_black.on_move(board, events)
-                data = pickle.dumps((board, moves))  # Serialize the board and moves
+                data = pickle.dumps((board, game.moves))  # Serialize the board and moves
                 try:
                     conn.send(data)  # Send serialized data
                 except [ConnectionResetError, ConnectionAbortedError]:
@@ -107,29 +105,9 @@ def main(current_date):
                         logger.info("Exiting")
                         run = False
                     else:
-                        board , moves = pickle.loads(data)  # Deserialize the data
+                        board, game.moves = pickle.loads(data)  # Deserialize the data
                 except ValueError:
                     pass
-
-            draw_board(board, screen, (player_none, player_black), images)  # Only player_black is active
-
-            if board.outcome() is not None:
-                print("Game ended: ", board.outcome())
-                game_end = True
-                with open(f"game_log_{current_date}.pgn", "w") as pgn_file:
-                    exporter = chess.pgn.FileExporter(pgn_file)
-                    game.accept(exporter)
-
-        screen.blit(font.render(f"Turn: {'White' if board.turn == chess.WHITE else 'Black'}", True, FONT_COLOR), (610, 0))
-        
-        try:
-            if board.peek() != last_move:
-                last_move = board.peek()
-                moves.append(last_move)
-                node = node.add_variation(last_move)
-            print_game_log(screen, font, moves)
-        except IndexError:
-            screen.blit(font.render("No moves", True, FONT_COLOR), (610, FONT_SIZE + 5))
 
         pygame.display.update()  # Update the display
         clock.tick(60)
@@ -139,8 +117,9 @@ def main(current_date):
 
 if __name__ == "__main__":
     try:
-        current_date = datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
-        main(current_date)
+        debug = input("Enable debug mode? (y/n): ").strip().lower()
+        debug = True if debug == "y" else False
+        main(debug)
         logger.info("Program exited")
     except Exception as e:
         logger.error(e)
