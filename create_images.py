@@ -20,6 +20,8 @@ with open(os.path.join(assets_dir, "WhiteSquare.png"), "rb") as f:
     images[f"white_square"] = base64.b64encode(f.read()).decode('utf-8')
 with open(os.path.join(assets_dir, "BlackSquare.png"), "rb") as f:
     images[f"black_square"] = base64.b64encode(f.read()).decode('utf-8')
+with open(os.path.join(assets_dir, "NoImage.png"), "rb") as f:
+    images[f"no_image"] = base64.b64encode(f.read()).decode('utf-8')
 
 with open("images_b64.txt", "w") as f:
     for key, value in images.items():
