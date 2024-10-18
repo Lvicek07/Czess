@@ -9,7 +9,7 @@ from datetime import datetime
 
 class LanMenu:
     def __init__(self):
-        self.options = ["Host", "Connect", "Watch"]
+        self.options = ["Host", "Connect"]
         self.selected_option = 0
         self.font = pygame.font.Font(None, 42)
 
@@ -70,12 +70,6 @@ def main(current_date):
 
                 import lan_multiplayer_client as client
                 client.main(current_date)
-                run = False
-            elif menu_result == 2:  # LAN Multiplayer
-                logger.info("Starting LAN multiplayer session")
-
-                import lan_multiplayer_watcher as watcher
-                watcher.main(current_date)
                 run = False
 
         menu.draw(screen)

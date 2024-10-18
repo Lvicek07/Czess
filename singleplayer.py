@@ -39,7 +39,7 @@ def main(current_date):
                     if 0 <= index < 4:
                         selected_difficulty = ["easy", "medium", "hard", "Fales"][index]
 
-    player_white = Player(chess.WHITE, board)
+    player_white = Player(chess.WHITE)
     ai_black = AI(chess.BLACK, selected_difficulty)
 
     moves = list()

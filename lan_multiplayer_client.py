@@ -24,8 +24,8 @@ def main(current_date):
 
     pygame.display.set_caption("Chess - LAN multiplayer - client")
 
-    player_black = Player(chess.BLACK, board)
-    player_none = Player(chess.WHITE, board)
+    player_black = Player(chess.BLACK)
+    player_none = Player(chess.WHITE)
 
     moves = list()
     last_move = None
