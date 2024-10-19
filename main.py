@@ -1,11 +1,10 @@
 import pygame
-import sys
-from common import *
 import logging as log
 from os import chdir, mkdir
 from os.path import abspath, dirname
 from os.path import isdir
 from datetime import datetime
+from common import *
 
 class MainMenu:
     def __init__(self):
@@ -51,8 +50,7 @@ class MainMenu:
         for event in events:
             if event.type == pygame.QUIT:
                 logger.info("Exiting")
-                pygame.quit()
-                sys.exit()
+                return "exit"  # Návrat pro ukončení
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     self.selected_option = (self.selected_option - 1) % len(self.options)
@@ -111,9 +109,11 @@ def main():
                 run = False
             elif menu_result == 3:
                 logger.info("Exiting the program")
-                run = False
+                run = False  # Ukončí smyčku pro návrat do hlavního menu
         menu.draw(screen)
         pygame.display.update()
+
+    pygame.quit()  # Ukončení Pygame po návratu do hlavního menu
 
 if __name__ == "__main__":
     try:
@@ -122,4 +122,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(e)
         raise e
-    

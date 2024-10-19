@@ -45,6 +45,9 @@ class Game:
         except IndexError:
             self.screen.blit(self.font.render("No moves", True, FONT_COLOR), (610,FONT_SIZE+5))
 
+    def exit_game():
+        pygame.quit()
+
 
 class Player:
     def __init__(self, color: bool) -> None:
@@ -99,30 +102,12 @@ class Player:
                         self.selected_piece = piece
                         self.selected_square = square
 
+
 class AI:
     def __init__(self, color: bool, difficulty: str) -> None:
-        self.difficulty      = difficulty
-        self.is_playing      = False
-        self.color           = color
-        self.selected_piece  = None
-        self.selected_square = None
-        self.king            = chess.Piece(chess.KING,   color)
-        self.queen           = chess.Piece(chess.QUEEN,  color)
-        self.rook_1          = chess.Piece(chess.ROOK,   color)
-        self.rook_2          = chess.Piece(chess.ROOK,   color)
-        self.knight_1        = chess.Piece(chess.KNIGHT, color)
-        self.knight_2        = chess.Piece(chess.KNIGHT, color)
-        self.bishop_1        = chess.Piece(chess.BISHOP, color)
-        self.bishop_2        = chess.Piece(chess.BISHOP, color)
-        self.pawn_1          = chess.Piece(chess.PAWN,   color)
-        self.pawn_2          = chess.Piece(chess.PAWN,   color)
-        self.pawn_3          = chess.Piece(chess.PAWN,   color)
-        self.pawn_4          = chess.Piece(chess.PAWN,   color)
-        self.pawn_5          = chess.Piece(chess.PAWN,   color)
-        self.pawn_6          = chess.Piece(chess.PAWN,   color)
-        self.pawn_7          = chess.Piece(chess.PAWN,   color)
-        self.pawn_8          = chess.Piece(chess.PAWN,   color)
-        self.pieces          = [self.king, self.queen, self.rook_1, self.rook_2, self.knight_1, self.knight_2, self.bishop_1, self.bishop_2, self.pawn_1, self.pawn_2, self.pawn_3, self.pawn_4, self.pawn_5, self.pawn_6, self.pawn_7, self.pawn_8]
+        self.difficulty = difficulty
+        self.color = color
+        self.selected_piece = None  # Přidání atributu selected_piece
 
     def on_move(self, board: chess.Board, events: tuple[pygame.event.Event, ...]) -> chess.Move:
         if self.difficulty == "easy":
@@ -135,16 +120,36 @@ class AI:
             move = self.fales_move(board)
         else:
             raise ValueError("Difficulty not selected")
+
         if move:
             board.push(move)
+            self.selected_piece = None  # Reset selected_piece po tahu
+        return move
 
     def easy_move(self, board: chess.Board) -> chess.Move:
+        """AI s náhodnými tahy."""
         return random.choice(list(board.legal_moves))
 
     def medium_move(self, board: chess.Board) -> chess.Move:
-        return random.choice(list(board.legal_moves))
+        """AI prioritizující zachycení a kontrolu centrálních polí."""
+        legal_moves = list(board.legal_moves)
+        capture_moves = [move for move in legal_moves if board.is_capture(move)]
+        center_squares = [chess.D4, chess.E4, chess.D5, chess.E5]
+
+        # Prioritizace zachycení figury
+        if capture_moves:
+            return random.choice(capture_moves)
+
+        # Prioritizace kontroly centrálních polí
+        central_moves = [move for move in legal_moves if move.to_square in center_squares]
+        if central_moves:
+            return random.choice(central_moves)
+
+        # Pokud není zachycení ani kontrola centra, zvolí náhodný tah
+        return random.choice(legal_moves)
 
     def hard_move(self, board: chess.Board) -> chess.Move:
+        """AI hledá nejlepší tah s důrazem na agresivitu."""
         best_move = None
         best_value = -9999
 
@@ -153,6 +158,12 @@ class AI:
             board_value = self.evaluate_board(board)
             board.pop()
 
+            # Zvýšená hodnota pro agresivní tahy (zachycení a kontrola centra)
+            if board.is_capture(move):
+                board_value += 5
+            elif move.to_square in [chess.D4, chess.E4, chess.D5, chess.E5]:
+                board_value += 3
+
             if board_value > best_value:
                 best_value = board_value
                 best_move = move
@@ -160,10 +171,11 @@ class AI:
         return best_move
 
     def fales_move(self, board: chess.Board) -> chess.Move:
-        best_move, _ = self.minimax(board, depth=3)
+        """AI s hlubokou analýzou tahů."""
+        best_move, _ = self.minimax(board, depth=3, maximizing_player=True)
         return best_move
 
-    def minimax(self, board: chess.Board, depth: int, maximizing_player: bool = True):# -> tuple[None, int] | tuple[Move | None, Any | Literal[-9999...:
+    def minimax(self, board: chess.Board, depth: int, maximizing_player: bool = True):
         if depth == 0 or board.is_game_over():
             return None, self.evaluate_board(board)
 
@@ -192,8 +204,11 @@ class AI:
             return best_move, best_value
 
     def evaluate_board(self, board: chess.Board) -> int:
+        """Hodnotí pozici na šachovnici."""
         if board.is_checkmate():
             return 10000 if board.turn == chess.BLACK else -10000
+        if board.is_stalemate() or board.is_insufficient_material():
+            return 0
 
         piece_values = {
             chess.PAWN: 1,
@@ -206,10 +221,34 @@ class AI:
 
         value = 0
         for piece in board.piece_map().values():
-            value += piece_values[piece.piece_type] if piece.color == chess.WHITE else -piece_values[piece.piece_type]
+            piece_value = piece_values[piece.piece_type]
+            value += piece_value if piece.color == self.color else -piece_value
+
+        # Přidání strategického hodnocení
+        value += self.position_score(board)
 
         return value
 
+    def position_score(self, board: chess.Board) -> int:
+        """Vyhodnocení pozice na základě umístění figur."""
+        score = 0
+        piece_square_values = {
+            chess.PAWN: [0, 0, 0, 0, 0, 0, 0, 0],
+            chess.KNIGHT: [-5, -4, -3, -3, -3, -3, -4, -5],
+            chess.BISHOP: [-4, -2, -1, -1, -1, -1, -2, -4],
+            chess.ROOK: [-2, -1, 0, 0, 0, 0, -1, -2],
+            chess.QUEEN: [-1, 0, 0, 0, 0, 0, 0, -1],
+            chess.KING: [0, 1, 1, 3, 3, 1, 1, 0],
+        }
+
+        for square, piece in board.piece_map().items():
+            piece_value = piece_square_values[piece.piece_type]
+            if piece.color == self.color:
+                score += piece_value[square // 8]
+            else:
+                score -= piece_value[square // 8]
+
+        return score
 
 def font_renderer(screen: pygame.Surface, text: str, pos: tuple[int, int], pos_type: str) -> None:
     surface = FONT.render(text, True, FONT_COLOR)
