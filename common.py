@@ -202,7 +202,7 @@ class AI:
                     best_value = value
                     best_move = move
             return best_move, best_value
-
+        
     def evaluate_board(self, board: chess.Board) -> int:
         """Hodnotí pozici na šachovnici."""
         if board.is_checkmate():
@@ -228,6 +228,7 @@ class AI:
         value += self.position_score(board)
 
         return value
+
 
     def position_score(self, board: chess.Board) -> int:
         """Vyhodnocení pozice na základě umístění figur."""
