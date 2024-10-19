@@ -2,8 +2,8 @@
 Pár negrů dělá šachy (Šlach)
 
 * Spisovatel - Main menu, local multiplayer, LAN multiplayer, bug fixes
-* Negr - opráski (hovno zrobil)
-* Nasral - Singleplayer (AI)
+* Ital - Senior grafik
+* Nasrat a Rozmazat - Singleplayer, AI a vály kol a kol
 
 ## Inicializace repozitáře
 * git init
