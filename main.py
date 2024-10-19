@@ -14,10 +14,10 @@ class MainMenu:
         self.font_title = pygame.font.Font(None, 64)
         self.font_option = pygame.font.Font(None, 50)
         self.font_help = pygame.font.Font(None, 30)
-        self.shadow_color = (100, 100, 100)
-        self.highlight_color = (75, 37, 190)
-        self.font_color = (0, 0, 0)
-        self.background_color = (50, 50, 50)
+        self.shadow_color = (128, 119, 97)
+        self.highlight_color = (187, 250, 245)
+        self.font_color = (130, 179, 175)
+        self.background_color = (222, 210, 177)
 
     def draw(self, screen: pygame.Surface):
         screen.fill(self.background_color)
