@@ -96,6 +96,10 @@ def main():
     run = True
     while run:
         events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                logger.info("Exiting")
+                run = False
         menu_result = menu.handle_input(events)
         if menu_result is not None:
             if menu_result == 0:
