@@ -23,16 +23,21 @@ class DifficultyMenu:
         screen.blit(title_shadow, title_rect.move(3, 3))
         screen.blit(title_surface, title_rect)
 
+        mouse_x, mouse_y = pygame.mouse.get_pos()  # Získej pozici myši
+
         for index, option in enumerate(self.options):
-            if index == self.selected_option:
+            # Zjisti, zda je kurzor myši nad aktuální možností
+            option_surface = self.font_option.render(option, True, self.font_color)
+            option_rect = option_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+            if option_rect.collidepoint(mouse_x, mouse_y):  # Pokud je myš nad možností
                 color = self.highlight_color
             else:
                 color = self.font_color
-            option_surface = self.font_option.render(option, True, color)
-            option_shadow = self.font_option.render(option, True, self.shadow_color)
-            option_rect = option_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
 
+            # Vykresli stín a text
+            option_shadow = self.font_option.render(option, True, self.shadow_color)
             screen.blit(option_shadow, option_rect.move(3, 3))
+            option_surface = self.font_option.render(option, True, color)
             screen.blit(option_surface, option_rect)
 
     def handle_input(self, events):

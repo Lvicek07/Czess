@@ -58,6 +58,12 @@ class MainMenu:
                     self.selected_option = (self.selected_option + 1) % len(self.options)
                 elif event.key == pygame.K_RETURN:
                     return self.selected_option
+            if event.type == pygame.MOUSEMOTION:
+                mouse_x, mouse_y = event.pos
+                for index in range(len(self.options)):
+                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+                    if option_rect.collidepoint(mouse_x, mouse_y):
+                        self.selected_option = index
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     mouse_x, mouse_y = event.pos
