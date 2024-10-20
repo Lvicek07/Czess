@@ -298,27 +298,37 @@ def init_game(debug=False) -> tuple[pygame.Surface, chess.Board, log.Logger, pyg
 
 def load_images(debug=False) -> Dict[str, pygame.Surface]:
     images = {}
-
     pieces = ["king", "queen", "rook", "bishop", "knight", "pawn", "square"]
     colors = ["white", "black"]
-    for piece in pieces:
-        for color in colors:
-            try:
-                img_b64 = IMAGES[f"{color}_{piece}"]
-            except:
-                img_b64 = ERROR_IMAGE
-                logger.error(f"! Could not load image of {color} {piece}, using error image")
-            img_data = base64.b64decode(img_b64)
-            img_bytes = io.BytesIO(img_data)
-            img = pygame.image.load(img_bytes)
-            img = pygame.transform.scale(img, (SQUARE_SIZE, SQUARE_SIZE))
-            images[f"{color}_{piece}"] = img
-            if img_b64 == ERROR_IMAGE:
-                logger.debug("Succesfully loaded error image")
-            else:
+
+    if debug:
+        for piece in pieces:
+            for color in colors:
+                img = pygame.image.load(f"assets/{piece}/{color}.png")
+                img = pygame.transform.scale(img, (SQUARE_SIZE, SQUARE_SIZE))
+                images[f"{color}_{piece}"] = img
                 logger.debug(f"Succesfully loaded {color}_{piece}")
-                
-    return images
+                    
+        return images
+    else:    
+        for piece in pieces:
+            for color in colors:
+                try:
+                    img_b64 = IMAGES[f"{color}_{piece}"]
+                except:
+                    img_b64 = ERROR_IMAGE
+                    logger.error(f"! Could not load image of {color} {piece}, using error image")
+                img_data = base64.b64decode(img_b64)
+                img_bytes = io.BytesIO(img_data)
+                img = pygame.image.load(img_bytes)
+                img = pygame.transform.scale(img, (SQUARE_SIZE, SQUARE_SIZE))
+                images[f"{color}_{piece}"] = img
+                if img_b64 == ERROR_IMAGE:
+                    logger.debug("Succesfully loaded error image")
+                else:
+                    logger.debug(f"Succesfully loaded {color}_{piece}")
+                    
+        return images
 
 def draw_piece(piece: chess.Piece, screen: pygame.Surface, pos: tuple[int, int], piece_images: Dict[str, pygame.Surface]) -> None:
     color = get_color(piece.color)
