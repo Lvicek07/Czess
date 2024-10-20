@@ -1,9 +1,7 @@
 import pygame
 import logging as log
-from os import chdir, mkdir
+from os import chdir
 from os.path import abspath, dirname
-from os.path import isdir
-from datetime import datetime
 from common import *
 
 class MainMenu:
