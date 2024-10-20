@@ -76,11 +76,11 @@ def main(debug=False):
                 logger.info("Exiting")
                 run = False
 
-        game.loop(events)
+        game.loop(events, multiplayer="server")
 
         if not game.game_end:
-            if board.turn == chess.WHITE:
-                data = pickle.dumps((board, game.moves))  # Serialize the board and moves
+            if game.board.turn == chess.WHITE:
+                data = pickle.dumps((game.board, game.moves))  # Serialize the board and moves
                 try:
                     conn.send(data)  # Send serialized data
                 except [ConnectionResetError, ConnectionAbortedError]:
@@ -94,7 +94,7 @@ def main(debug=False):
                         logger.info("Exiting")
                         run = False
                     else:
-                        board, game.moves = pickle.loads(data)  # Deserialize the data
+                        game.board, game.moves = pickle.loads(data)  # Deserialize the data
                 except ValueError:
                     pass
 

@@ -3,7 +3,6 @@ import pygame
 from common import *
 import chess
 import chess.pgn
-from datetime import datetime
 import pickle
 import pygame_textinput
 
@@ -87,11 +86,11 @@ def main(debug=False):
                 logger.info("Exiting")
                 run = False
 
-        game.loop(events)
+        game.loop(events, multiplayer="client")
 
         if not game.game_end:
-            if board.turn == chess.BLACK:
-                data = pickle.dumps((board, game.moves))  # Serialize the board and moves
+            if game.board.turn == chess.BLACK:
+                data = pickle.dumps((game.board, game.moves))  # Serialize the board and moves
                 try:
                     conn.send(data)  # Send serialized data
                 except [ConnectionResetError, ConnectionAbortedError]:
@@ -105,7 +104,7 @@ def main(debug=False):
                         logger.info("Exiting")
                         run = False
                     else:
-                        board, game.moves = pickle.loads(data)  # Deserialize the data
+                        game.board, game.moves = pickle.loads(data)  # Deserialize the data
                 except ValueError:
                     pass
 
@@ -121,6 +120,8 @@ if __name__ == "__main__":
         debug = True if debug == "y" else False
         main(debug)
         logger.info("Program exited")
+    except KeyboardInterrupt:
+        logger.info("User Exited")
     except Exception as e:
         logger.error(e)
         raise e

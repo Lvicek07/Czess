@@ -74,15 +74,14 @@ class MainMenu:
                             return self.selected_option
         return None
 
-def main():
+def main(debug=False):
     global logger
     chdir(dirname(abspath(__file__)))
-    if not isdir('logs'):
-        mkdir("logs")
     logger = log.getLogger(__name__)
-    current_date = datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
-    log_filename = f"logs/log_{current_date}.log"
-    log.basicConfig(filename=log_filename, filemode="a", level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+    if debug:
+        log.basicConfig(level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+    else:
+        log.basicConfig(level=log.WARNING,  format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
 
     pygame.init()
 
@@ -105,17 +104,17 @@ def main():
             if menu_result == 0:
                 logger.info("Starting singleplayer session")            
                 import singleplayer
-                singleplayer.main(current_date)
+                singleplayer.main(debug)
                 run = False
             elif menu_result == 1:
                 logger.info("Starting local multiplayer session")
                 import local_multiplayer
-                local_multiplayer.main(current_date)
+                local_multiplayer.main(debug)
                 run = False
             elif menu_result == 2:
                 logger.info("Starting LAN multiplayer session")                
                 import lan_multiplayer_menu
-                lan_multiplayer_menu.main(current_date)
+                lan_multiplayer_menu.main(debug)
                 run = False
             elif menu_result == 3:
                 logger.info("Exiting the program")
@@ -127,8 +126,12 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        debug = input("Enable debug mode? (y/n): ").strip().lower()
+        debug = True if debug == "y" else False
+        main(debug)
         logger.info("Program exited")
+    except KeyboardInterrupt:
+        logger.info("User Exited")
     except Exception as e:
         logger.error(e)
         raise e
