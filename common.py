@@ -56,6 +56,88 @@ class Game:
             self.screen.blit(self.font.render("No moves", True, FONT_COLOR), (610,FONT_SIZE+5))
 
 
+class Menu:
+    def __init__(self):
+        self.options = None
+        self.title = None
+        self.selected_option = 0
+        self.font_title = pygame.font.Font(None, 64)
+        self.font_option = pygame.font.Font(None, 50)
+        self.font_help = pygame.font.Font(None, 30)
+        self.shadow_color = (128, 119, 97)
+        self.highlight_color = (187, 250, 245)
+        self.font_color = (130, 179, 175)
+        self.background_color = (222, 210, 177)
+
+    def draw(self, screen: pygame.Surface):
+        screen.fill(self.background_color)
+
+        title_surface = self.font_title.render(self.title, True, self.font_color)
+        title_shadow = self.font_title.render(self.title, True, self.shadow_color)
+        title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 8))
+        screen.blit(title_shadow, title_rect.move(3, 3))
+        screen.blit(title_surface, title_rect)
+
+        help_surface = self.font_help.render("| Press Enter to choose |", True, self.font_color)
+        help_rect = help_surface.get_rect(center=(WIDTH // 2, HEIGHT // 1.15))
+        screen.blit(help_surface, help_rect)
+
+        for index, option in enumerate(self.options):
+            if index == self.selected_option:
+                color = self.highlight_color
+            else:
+                color = self.font_color
+            option_surface = self.font_option.render(option, True, color)
+            option_shadow = self.font_option.render(option, True, self.shadow_color)
+            option_rect = option_surface.get_rect(center=(WIDTH // 2, HEIGHT // 3 + index * 60))
+
+            screen.blit(option_shadow, option_rect.move(3, 3))
+            screen.blit(option_surface, option_rect)
+
+    def move_selection(self, direction):
+        self.selected_option = (self.selected_option + direction) % len(self.options)
+
+    def handle_input(self, events):
+        for event in events:
+            if event.type == pygame.QUIT:
+                return len(self.options)-1
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    self.selected_option = (self.selected_option - 1) % len(self.options)
+                elif event.key == pygame.K_DOWN:
+                    self.selected_option = (self.selected_option + 1) % len(self.options)
+                elif event.key == pygame.K_RETURN:
+                    return self.selected_option
+            elif event.type == pygame.MOUSEMOTION:
+                mouse_x, mouse_y = event.pos
+                for index in range(len(self.options)):
+                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 3 + index * 60))
+                    if option_rect.collidepoint(mouse_x, mouse_y):
+                        self.selected_option = index
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mouse_x, mouse_y = event.pos
+                    for index in range(len(self.options)):
+                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+                        if option_rect.collidepoint(mouse_x, mouse_y):
+                            self.selected_option = index
+                            return self.selected_option
+        return None
+    
+
+class MainMenu(Menu):
+    def __init__(self):
+        super().__init__()
+        self.options = ["Singleplayer", "Local Multiplayer", "LAN Multiplayer", "Exit"]
+        self.title = "ŠLACH - Main Menu"
+
+class DifficultyMenu(Menu):
+    def __init__(self):
+        super().__init__()
+        self.options = ["Easy", "Medium", "Hard", "Fales", "Exit"]
+        self.title = "ŠLACH - Singleplayer Menu"
+
+
 class Player:
     def __init__(self, color: bool) -> None:
         logger.debug("Initializing Player")
@@ -305,7 +387,10 @@ def load_images(debug=False) -> Dict[str, pygame.Surface]:
         for piece in pieces:
             for color in colors:
                 img = pygame.image.load(f"assets/{piece}/{color}.png")
-                img = pygame.transform.scale(img, (SQUARE_SIZE-(IMAGE_OFFSET*2), SQUARE_SIZE-(IMAGE_OFFSET*2)))
+                if piece == "square":
+                    img = pygame.transform.scale(img, (SQUARE_SIZE, SQUARE_SIZE))
+                else:
+                    img = pygame.transform.scale(img, (SQUARE_SIZE-(IMAGE_OFFSET*2), SQUARE_SIZE-(IMAGE_OFFSET*2)))
                 images[f"{color}_{piece}"] = img
                 logger.debug(f"Succesfully loaded {color}_{piece}")
                     
@@ -321,7 +406,10 @@ def load_images(debug=False) -> Dict[str, pygame.Surface]:
                 img_data = base64.b64decode(img_b64)
                 img_bytes = io.BytesIO(img_data)
                 img = pygame.image.load(img_bytes)
-                img = pygame.transform.scale(img, (SQUARE_SIZE-(IMAGE_OFFSET*2), SQUARE_SIZE-(IMAGE_OFFSET*2)))
+                if piece == "square":
+                    img = pygame.transform.scale(img, (SQUARE_SIZE, SQUARE_SIZE))
+                else:
+                    img = pygame.transform.scale(img, (SQUARE_SIZE-(IMAGE_OFFSET*2), SQUARE_SIZE-(IMAGE_OFFSET*2)))
                 images[f"{color}_{piece}"] = img
                 if img_b64 == ERROR_IMAGE:
                     logger.debug("Succesfully loaded error image")
