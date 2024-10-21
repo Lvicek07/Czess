@@ -39,7 +39,7 @@ class MainMenu:
 
         # Dynamicky upravujeme pozice a velikosti textu na základě velikosti okna
         option_height = height // (len(self.options) + 1)
-        spacing = 60  # Zvětšení vzdálenosti mezi položkami (o 20 pixelů)
+        spacing = option_height * 0.5  # Vzdálenost mezi položkami na základě výšky okna
 
         for index, option in enumerate(self.options):
             if index == self.selected_option:
@@ -49,7 +49,7 @@ class MainMenu:
             
             option_surface = self.font_option.render(option, True, color)
             option_shadow = self.font_option.render(option, True, self.shadow_color)
-            option_rect = option_surface.get_rect(center=(width // 2, height // 2 + index * spacing + 10))
+            option_rect = option_surface.get_rect(center=(width // 2, height // 2 + index * spacing))
 
             # Upravujeme pozici pro Exit
             if option == "Exit":
@@ -62,29 +62,33 @@ class MainMenu:
         self.selected_option = (self.selected_option + direction) % len(self.options)
 
     def handle_input(self, events, width, height):
-        spacing = 60  # Zvětšení vzdálenosti mezi položkami (o 20 pixelů)
+        # Dynamicky upravujeme pozici a velikosti textu na základě velikosti okna
+        option_height = height // (len(self.options) + 1)
+        spacing = option_height * 0.5  # Vzdálenost mezi položkami na základě výšky okna
+
         for event in events:
             if event.type == pygame.QUIT:
                 log.info("Exiting")
                 return "exit"  # Návrat pro ukončení
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    self.selected_option = (self.selected_option - 1) % len(self.options)
+                    self.move_selection(-1)
                 elif event.key == pygame.K_DOWN:
-                    self.selected_option = (self.selected_option + 1) % len(self.options)
+                    self.move_selection(1)
                 elif event.key == pygame.K_RETURN:
                     return self.selected_option
             if event.type == pygame.MOUSEMOTION:
                 mouse_x, mouse_y = event.pos
                 for index in range(len(self.options)):
-                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * spacing + 10))
+                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * spacing))
                     if option_rect.collidepoint(mouse_x, mouse_y):
                         self.selected_option = index
+                        break  # Ujistíme se, že se zvýraznění změní jen na jednu položku
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     mouse_x, mouse_y = event.pos
                     for index in range(len(self.options)):
-                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * spacing + 10))
+                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * spacing))
                         if option_rect.collidepoint(mouse_x, mouse_y):
                             self.selected_option = index
                             return self.selected_option
