@@ -23,43 +23,51 @@ class DifficultyMenu:
         screen.blit(title_shadow, title_rect.move(3, 3))
         screen.blit(title_surface, title_rect)
 
-        mouse_x, mouse_y = pygame.mouse.get_pos()  # Získej pozici myši
+        mouse_x, mouse_y = pygame.mouse.get_pos()
 
         for index, option in enumerate(self.options):
-            # Zjisti, zda je kurzor myši nad aktuální možností
-            option_surface = self.font_option.render(option, True, self.font_color)
-            option_rect = option_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
-            if option_rect.collidepoint(mouse_x, mouse_y):  # Pokud je myš nad možností
+            if index == self.selected_option:
                 color = self.highlight_color
             else:
                 color = self.font_color
 
-            # Vykresli stín a text
-            option_shadow = self.font_option.render(option, True, self.shadow_color)
-            screen.blit(option_shadow, option_rect.move(3, 3))
             option_surface = self.font_option.render(option, True, color)
+            option_shadow = self.font_option.render(option, True, self.shadow_color)
+            option_rect = option_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+            
+            screen.blit(option_shadow, option_rect.move(3, 3))
             screen.blit(option_surface, option_rect)
+
+    def move_selection(self, direction):
+        self.selected_option = (self.selected_option + direction) % len(self.options)
 
     def handle_input(self, events):
         for event in events:
             if event.type == pygame.QUIT:
-                return "exit"  # Vrátí se k ukončení
+                return "exit"
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    self.selected_option = (self.selected_option - 1) % len(self.options)
+                    self.move_selection(-1)
                 elif event.key == pygame.K_DOWN:
-                    self.selected_option = (self.selected_option + 1) % len(self.options)
+                    self.move_selection(1)
                 elif event.key == pygame.K_RETURN:
                     return self.selected_option
-                elif event.key == pygame.K_ESCAPE:  # Stisknutí ESC
-                    return "back"  # Návrat do hlavního menu
+                elif event.key == pygame.K_ESCAPE:
+                    return "back"
+            if event.type == pygame.MOUSEMOTION:
+                mouse_x, mouse_y = event.pos
+                for index in range(len(self.options)):
+                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+                    if option_rect.collidepoint(mouse_x, mouse_y):
+                        self.selected_option = index
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     mouse_x, mouse_y = event.pos
                     for index in range(len(self.options)):
                         option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
                         if option_rect.collidepoint(mouse_x, mouse_y):
-                            return index
+                            self.selected_option = index
+                            return self.selected_option
         return None
 
 def selecting_difficulty(screen: pygame.Surface):
@@ -69,15 +77,14 @@ def selecting_difficulty(screen: pygame.Surface):
         events = pygame.event.get()
         menu_result = menu.handle_input(events)
         if menu_result is not None:
-            if menu_result == "back":  # Návrat do hlavního menu
+            if menu_result == "back":
                 return None
-            elif menu_result == "exit":  # Ukončení programu
+            elif menu_result == "exit":
                 return "exit"
-            # Opraveno, aby se zabránilo IndexError
-            if 0 <= menu_result < len(menu.options) - 1:  # Poslední volba je "Exit"
+            if 0 <= menu_result < len(menu.options) - 1:
                 return ["easy", "medium", "hard", "Fales"][menu_result]
             else:
-                return None  # Vrátí None, pokud se vybere "Exit"
+                return None
 
         menu.draw(screen)
         pygame.display.update()
@@ -90,10 +97,10 @@ def main(debug=False):
 
     while True:
         selected_difficulty = selecting_difficulty(screen)
-        if selected_difficulty is None:  # Pokud se vrátíme do hlavního menu
-            return  # Návrat do hlavního menu
-        if selected_difficulty == "exit":  # Pokud se ukončuje program
-            break  # Ukončení smyčky hry a návrat do hlavního menu
+        if selected_difficulty is None:
+            return
+        if selected_difficulty == "exit":
+            break
 
         logger.debug("Entering game loop")
 
@@ -104,16 +111,16 @@ def main(debug=False):
         while run:
             events = pygame.event.get()
             for event in events:
-                if event.type == pygame.QUIT:  # Pokud se zavře okno
-                    run = False  # Ukončete smyčku hry
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:  # Pokud stisknete ESC
-                    run = False  # Ukončete smyčku hry
+                if event.type == pygame.QUIT:
+                    run = False
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    run = False
 
             game.loop(events)
-            pygame.display.update()  # Aktualizace obrazovky
+            pygame.display.update()
             clock.tick(60)
 
-    pygame.quit()  # Ukončení Pygame po návratu do hlavního menu
+    pygame.quit()
 
 if __name__ == "__main__":
     try:
