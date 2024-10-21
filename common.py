@@ -334,11 +334,11 @@ def draw_piece(piece: chess.Piece, screen: pygame.Surface, pos: tuple[int, int],
     color = get_color(piece.color)
     type  = chess.piece_name(piece.piece_type)
     x, y  = pos
-    x     = x*SQUARE_SIZE
-    y     = y*SQUARE_SIZE
+    x     = x*SQUARE_SIZE+IMAGE_OFFSET
+    y     = y*SQUARE_SIZE+IMAGE_OFFSET
     img   = piece_images[f"{color}_{type}"]
 
-    screen.blit(img, (pos[0]*SQUARE_SIZE, pos[1]*SQUARE_SIZE))
+    screen.blit(img, (x, y))
 
 def draw_square_overlay(screen: pygame.Surface, row: int, col: int, images: Dict[str, pygame.Surface]) -> None:
     if (row + col) % 2 == 1:
@@ -404,6 +404,7 @@ def print_game_log(screen: pygame.Surface, font: pygame.font.Font, moves: Dict[i
 pygame.font.init()
 WIDTH, HEIGHT   = 1200, 600 # 600 x 600 herní pole
 SQUARE_SIZE     = 600 // 8  # 75
+IMAGE_OFFSET    = 2
 ROWS, COLS      = 8, 8
 WHITE           = (255, 255, 255)
 MOSS_GREEN      = (119, 149, 86)
