@@ -321,7 +321,7 @@ def load_images(debug=False) -> Dict[str, pygame.Surface]:
                 img_data = base64.b64decode(img_b64)
                 img_bytes = io.BytesIO(img_data)
                 img = pygame.image.load(img_bytes)
-                img = pygame.transform.scale(img, (SQUARE_SIZE, SQUARE_SIZE))
+                img = pygame.transform.scale(img, (SQUARE_SIZE-(IMAGE_OFFSET*2), SQUARE_SIZE-(IMAGE_OFFSET*2)))
                 images[f"{color}_{piece}"] = img
                 if img_b64 == ERROR_IMAGE:
                     logger.debug("Succesfully loaded error image")
