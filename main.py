@@ -7,6 +7,12 @@ from common import *
 class MainMenu:
     def __init__(self):
         self.options = ["Singleplayer", "Local Multiplayer", "LAN Multiplayer", "Exit"]
+        self.help_texts = [
+            "Play against the AI.",
+            "Play with a friend on the same device.",
+            "Play with a friend over the network.",
+            "Exit the game."
+        ]
         self.selected_option = 0
         self.font_title = pygame.font.Font(None, 64)
         self.font_option = pygame.font.Font(None, 50)
@@ -14,29 +20,40 @@ class MainMenu:
         self.shadow_color = (128, 119, 97)
         self.highlight_color = (187, 250, 245)
         self.font_color = (130, 179, 175)
+        self.exit_color = (255, 0, 0)  # Červená barva pro Exit
         self.background_color = (222, 210, 177)
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface, width: int, height: int):
         screen.fill(self.background_color)
 
-        title_surface = self.font_title.render("ŠLACH", True, self.font_color)
-        title_shadow = self.font_title.render("ŠLACH", True, self.shadow_color)
-        title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
+        title_surface = self.font_title.render("CZESS", True, self.font_color)
+        title_shadow = self.font_title.render("CZESS", True, self.shadow_color)
+        title_rect = title_surface.get_rect(center=(width // 2, height // 4))
         screen.blit(title_shadow, title_rect.move(3, 3))
         screen.blit(title_surface, title_rect)
 
-        help_surface = self.font_help.render("Use arrow keys to select | Press Enter to choose | (also you can use mouse.. moron..)", True, self.font_color)
-        help_rect = help_surface.get_rect(center=(WIDTH // 2, HEIGHT // 1.15))
+        # Posun nápovědy dolů, aby se nezasahovalo do položky "Exit"
+        help_surface = self.font_help.render(self.help_texts[self.selected_option], True, self.font_color)
+        help_rect = help_surface.get_rect(center=(width // 2, height // 1.1))
         screen.blit(help_surface, help_rect)
+
+        # Dynamicky upravujeme pozice a velikosti textu na základě velikosti okna
+        option_height = height // (len(self.options) + 1)
+        spacing = 60  # Zvětšení vzdálenosti mezi položkami (o 20 pixelů)
 
         for index, option in enumerate(self.options):
             if index == self.selected_option:
-                color = self.highlight_color
+                color = self.exit_color if option == "Exit" else self.highlight_color
             else:
                 color = self.font_color
+            
             option_surface = self.font_option.render(option, True, color)
             option_shadow = self.font_option.render(option, True, self.shadow_color)
-            option_rect = option_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+            option_rect = option_surface.get_rect(center=(width // 2, height // 2 + index * spacing + 10))
+
+            # Upravujeme pozici pro Exit
+            if option == "Exit":
+                option_rect.y += 20  # Posunout Exit o 20 pixelů níže
 
             screen.blit(option_shadow, option_rect.move(3, 3))
             screen.blit(option_surface, option_rect)
@@ -44,10 +61,11 @@ class MainMenu:
     def move_selection(self, direction):
         self.selected_option = (self.selected_option + direction) % len(self.options)
 
-    def handle_input(self, events):
+    def handle_input(self, events, width, height):
+        spacing = 60  # Zvětšení vzdálenosti mezi položkami (o 20 pixelů)
         for event in events:
             if event.type == pygame.QUIT:
-                logger.info("Exiting")
+                log.info("Exiting")
                 return "exit"  # Návrat pro ukončení
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
@@ -59,14 +77,14 @@ class MainMenu:
             if event.type == pygame.MOUSEMOTION:
                 mouse_x, mouse_y = event.pos
                 for index in range(len(self.options)):
-                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * spacing + 10))
                     if option_rect.collidepoint(mouse_x, mouse_y):
                         self.selected_option = index
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     mouse_x, mouse_y = event.pos
                     for index in range(len(self.options)):
-                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * spacing + 10))
                         if option_rect.collidepoint(mouse_x, mouse_y):
                             self.selected_option = index
                             return self.selected_option
@@ -79,12 +97,15 @@ def main(debug=False):
     if debug:
         log.basicConfig(level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
     else:
-        log.basicConfig(level=log.WARNING,  format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+        log.basicConfig(level=log.WARNING, format='%(asctime)s - [%(name)s] - [%(levelname)s] - %(message)s')
 
     pygame.init()
 
     logger.debug("Initializing main menu")
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    
+    # Nastavení výchozí velikosti okna
+    initial_width, initial_height = 800, 600
+    screen = pygame.display.set_mode((initial_width, initial_height), pygame.RESIZABLE)  # Povolíme změnu velikosti okna
     pygame.display.set_caption('Chess Game')
 
     menu = MainMenu()
@@ -100,7 +121,14 @@ def main(debug=False):
                 pygame.quit()  # Ukončí Pygame a tím pádem i kreslení
                 return  # Návrat, aby se předešlo dalšímu vykreslování
 
-        menu_result = menu.handle_input(events)
+        # Kontrola velikosti okna a nastavení minimální velikosti
+        width, height = screen.get_size()
+        if width < 800 or height < 600:
+            width = max(width, 800)
+            height = max(height, 600)
+            screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+
+        menu_result = menu.handle_input(events, width, height)  # Předat šířku a výšku do handle_input
         if menu_result is not None:
             if menu_result == 0:
                 logger.info("Starting singleplayer session")            
@@ -122,7 +150,7 @@ def main(debug=False):
                 run = False  # Ukončí smyčku pro návrat do hlavního menu
 
         if run:  # Zkontroluj, zda stále pokračujeme
-            menu.draw(screen)
+            menu.draw(screen, width, height)  # Předat velikost obrazovky do metody draw
             pygame.display.update()
 
     pygame.quit()  # Ukončení Pygame po návratu do hlavního menu
