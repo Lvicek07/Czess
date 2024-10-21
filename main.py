@@ -97,6 +97,9 @@ def main(debug=False):
             if event.type == pygame.QUIT:
                 logger.info("Exiting")
                 run = False
+                pygame.quit()  # Ukončí Pygame a tím pádem i kreslení
+                return  # Návrat, aby se předešlo dalšímu vykreslování
+
         menu_result = menu.handle_input(events)
         if menu_result is not None:
             if menu_result == 0:
@@ -117,10 +120,13 @@ def main(debug=False):
             elif menu_result == 3:
                 logger.info("Exiting the program")
                 run = False  # Ukončí smyčku pro návrat do hlavního menu
-        menu.draw(screen)
-        pygame.display.update()
+
+        if run:  # Zkontroluj, zda stále pokračujeme
+            menu.draw(screen)
+            pygame.display.update()
 
     pygame.quit()  # Ukončení Pygame po návratu do hlavního menu
+
 
 if __name__ == "__main__":
     try:
