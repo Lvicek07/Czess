@@ -162,9 +162,7 @@ def main(debug=False):
 
 if __name__ == "__main__":
     try:
-        debug = input("Enable debug mode? (y/n): ").strip().lower()
-        debug = True if debug == "y" else False
-        main(debug)
+        main()
         logger.info("Program exited")
     except KeyboardInterrupt:
         logger.info("User Exited")
