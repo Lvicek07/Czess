@@ -45,7 +45,7 @@ class Game:
                 self.game_state = f"Game ended: {self.board.outcome().result}"
                 self.game_end = True
 
-        self.screen.blit(self.font.render(self.game_state, True, FONT_COLOR), (610,0))
+        self.screen.blit(self.font.render(self.game_state, True, FONT_COLOR), (660,0))
         try:
             if self.board.peek() != self.last_move:
                 self.last_move = self.board.peek()
@@ -53,20 +53,20 @@ class Game:
                 self.move_num += 1
             print_game_log(self.screen, self.font, self.moves)
         except IndexError:
-            self.screen.blit(self.font.render("No moves", True, FONT_COLOR), (610,FONT_SIZE+5))
+            self.screen.blit(self.font.render("No moves", True, FONT_COLOR), (660,FONT_SIZE+5))
 
 
 class Menu:
     def __init__(self):
-        self.options = None
-        self.title = None
-        self.selected_option = 0
-        self.font_title = pygame.font.Font(None, 64)
-        self.font_option = pygame.font.Font(None, 50)
-        self.font_help = pygame.font.Font(None, 30)
-        self.shadow_color = (128, 119, 97)
-        self.highlight_color = (187, 250, 245)
-        self.font_color = (130, 179, 175)
+        self.options          = None
+        self.title            = None
+        self.selected_option  = 0
+        self.font_title       = pygame.font.Font(None, 64)
+        self.font_option      = pygame.font.Font(None, 50)
+        self.font_help        = pygame.font.Font(None, 30)
+        self.shadow_color     = (128, 119, 97)
+        self.highlight_color  = (187, 250, 245)
+        self.font_color       = (130, 179, 175)
         self.background_color = (222, 210, 177)
 
     def draw(self, screen: pygame.Surface):
@@ -150,31 +150,32 @@ class Player:
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                x = int(mouse_pos[0] // SQUARE_SIZE)
-                y = 7 - int(mouse_pos[1] // SQUARE_SIZE)
-                square = chess.square(x, y)
-                piece = board.piece_at(square)
+                if mouse_pos[0] >= 50 and mouse_pos[1] >= 50:
+                    x = int((mouse_pos[0]-50) // SQUARE_SIZE)
+                    y = 7 - int((mouse_pos[1]-50) // SQUARE_SIZE)
+                    square = chess.square(x, y)
+                    piece = board.piece_at(square)
 
-                if self.selected_piece:
-                    if square == self.selected_square:
-                        self.selected_piece = None
-                        self.selected_square = None
-                        logger.debug(f"Player {get_color(self.color)} cancelled move")
-                    elif board.color_at(square) == self.color:
-                        self.selected_piece = piece
-                        self.selected_square = square
-                        logger.debug(f"Player {get_color(self.color)} reselected piece {chess.piece_name(self.selected_piece.piece_type)}")
-                    else:
-                        move = chess.Move(self.selected_square, square)
-                        if move in board.legal_moves:
-                            board.push(move)
-                            logger.debug(f"Player {get_color(self.color)} moved piece {chess.piece_name(self.selected_piece.piece_type)} from {chess.square_name(self.selected_square)} to {chess.square_name(square)}")
+                    if self.selected_piece:
+                        if square == self.selected_square:
                             self.selected_piece = None
                             self.selected_square = None
-                elif piece:
-                    if piece.color == self.color:
-                        self.selected_piece = piece
-                        self.selected_square = square
+                            logger.debug(f"Player {get_color(self.color)} cancelled move")
+                        elif board.color_at(square) == self.color:
+                            self.selected_piece = piece
+                            self.selected_square = square
+                            logger.debug(f"Player {get_color(self.color)} reselected piece {chess.piece_name(self.selected_piece.piece_type)}")
+                        else:
+                            move = chess.Move(self.selected_square, square)
+                            if move in board.legal_moves:
+                                board.push(move)
+                                logger.debug(f"Player {get_color(self.color)} moved piece {chess.piece_name(self.selected_piece.piece_type)} from {chess.square_name(self.selected_square)} to {chess.square_name(square)}")
+                                self.selected_piece = None
+                                self.selected_square = None
+                    elif piece:
+                        if piece.color == self.color:
+                            self.selected_piece = piece
+                            self.selected_square = square
 
 
 class AI:
@@ -327,30 +328,6 @@ class AI:
 
         return score
 
-def font_renderer(screen: pygame.Surface, text: str, pos: tuple[int, int], pos_type: str) -> None:
-    surface = FONT.render(text, True, FONT_COLOR)
-    if pos_type == "topleft":
-        rect = surface.get_rect(topleft=pos)
-    elif pos_type == "topright":
-        rect = surface.get_rect(topright=pos)
-    elif pos_type == "center":
-        rect = surface.get_rect(center=pos)
-    elif pos_type == "bottomright":
-        rect = surface.get_rect(bottomright=pos)
-    elif pos_type == "bottomleft":
-        rect = surface.get_rect(bottomleft=pos)
-    elif pos_type == "midtop":
-        rect = surface.get_rect(midtop=pos)
-    elif pos_type == "midleft":
-        rect = surface.get_rect(midleft=pos)
-    elif pos_type == "midbottom":
-        rect = surface.get_rect(midbottom=pos)
-    elif pos_type == "midright":
-        rect = surface.get_rect(midright=pos)
-    else:
-        raise ValueError("Invalid position type")
-    screen.blit(surface, rect)
-
 def get_color(color: bool) -> str:
     return "white" if color==True else "black"
     
@@ -422,18 +399,18 @@ def draw_piece(piece: chess.Piece, screen: pygame.Surface, pos: tuple[int, int],
     color = get_color(piece.color)
     type  = chess.piece_name(piece.piece_type)
     x, y  = pos
-    x     = x*SQUARE_SIZE+IMAGE_OFFSET
-    y     = y*SQUARE_SIZE+IMAGE_OFFSET
+    x     = x*SQUARE_SIZE+IMAGE_OFFSET+50
+    y     = y*SQUARE_SIZE+IMAGE_OFFSET+50
     img   = piece_images[f"{color}_{type}"]
 
     screen.blit(img, (x, y))
 
 def draw_square_overlay(screen: pygame.Surface, row: int, col: int, images: Dict[str, pygame.Surface]) -> None:
     if (row + col) % 2 == 1:
-        screen.blit(images["black_square"], (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+        screen.blit(images["black_square"], (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
     else:
-        screen.blit(images["white_square"], (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-    pygame.draw.rect(screen, (128, 255, 128), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), width=15)
+        screen.blit(images["white_square"], (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
+    pygame.draw.rect(screen, (128, 255, 128), (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE), width=15)
 
 def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player, Player], images: Dict[str, pygame.Surface]) -> None:
     legal_moves = None
@@ -441,21 +418,48 @@ def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player
     for row in range(ROWS):
         for col in range(COLS):
             if (row + col) % 2 == 1:
-                screen.blit(images["black_square"], (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+                screen.blit(images["black_square"], (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
             else:
-                screen.blit(images["white_square"], (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-    
+                screen.blit(images["white_square"], (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
+    for row in range(ROWS):
+        if row % 2 == 1:
+            square_color = (255, 255, 255)
+            text_color   = (0, 0, 0)
+        else:
+            square_color = (0, 0, 0)
+            text_color   = (255, 255, 255)
+        pygame.draw.rect(screen, square_color, (0, row * SQUARE_SIZE+50, 50, SQUARE_SIZE))
+        text = FONT.render(chess.RANK_NAMES[row], True, text_color)
+        x = 0 + SQUARE_SIZE//2 - FONT.size(chess.RANK_NAMES[row])[0]//1.5
+        y = row * SQUARE_SIZE+50 + SQUARE_SIZE//2
+        rect = text.get_rect(center=(x, y))
+        screen.blit(text, rect)
+    for col in range(COLS):
+        if col % 2 == 1:
+            square_color = (255, 255, 255)
+            text_color   = (0, 0, 0)
+        else:
+            square_color = (0, 0, 0)
+            text_color   = (255, 255, 255)
+        pygame.draw.rect(screen, square_color, (col * SQUARE_SIZE+50, 0, SQUARE_SIZE, 50))
+        text = FONT.render(chess.FILE_NAMES[col].upper(), True, text_color)
+        x = col * SQUARE_SIZE+50 + SQUARE_SIZE//1.5 - FONT.size(chess.FILE_NAMES[col].upper())[0]//1.5
+        y = 0 + SQUARE_SIZE//2 - FONT.size(chess.FILE_NAMES[col])[1]//2
+        rect = text.get_rect(center=(x, y))
+        screen.blit(text, rect)
+    pygame.draw.rect(screen, (255, 255, 255), (0, 0, 50, 50))
+
     if board.turn == chess.WHITE:
         if players[0].selected_piece:
             row = 7 - chess.square_rank(players[0].selected_square)
             col = chess.square_file(players[0].selected_square)
-            pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
             legal_moves = [move for move in board.legal_moves if move.from_square == players[0].selected_square]
     else:
         if players[1].selected_piece:
             row = 7 - chess.square_rank(players[1].selected_square)
             col = chess.square_file(players[1].selected_square)
-            pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+            pygame.draw.rect(screen, (0, 255, 0), (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
             legal_moves = [move for move in board.legal_moves if move.from_square == players[1].selected_square]
 
     if legal_moves:    
@@ -485,12 +489,13 @@ def print_game_log(screen: pygame.Surface, font: pygame.font.Font, moves: Dict[i
         n = 1
         for index, move in moves.items():
             text = f"{index}. {move.uci()}"
-            screen.blit(font.render(text, True, FONT_COLOR), (610,x))
+            screen.blit(font.render(text, True, FONT_COLOR), (660,x))
             x += FONT_SIZE + 5
             n += 1
 
 pygame.font.init()
-WIDTH, HEIGHT   = 1200, 600 # 600 x 600 herní pole
+WIDTH, HEIGHT   = 1100, 650 # 600 x 600 herní pole
+MENU_WIDTH, MENU_HEIGHT = 800, 600
 SQUARE_SIZE     = 600 // 8  # 75
 IMAGE_OFFSET    = 2         # Image size = 71x71
 ROWS, COLS      = 8, 8
