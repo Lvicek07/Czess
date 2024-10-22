@@ -27,7 +27,7 @@ class DifficultyMenu:
         # Vykreslení titulu menu s odstínem stínu
         title_surface = self.font_title.render("Select Difficulty", True, self.font_color)
         title_shadow = self.font_title.render("Select Difficulty", True, self.shadow_color)
-        title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
+        title_rect = title_surface.get_rect(center=(MENU_WIDTH // 2, MENU_HEIGHT // 4))
         screen.blit(title_shadow, title_rect.move(3, 3))
         screen.blit(title_surface, title_rect)
 
@@ -45,7 +45,7 @@ class DifficultyMenu:
             # Vykreslení textu možnosti s odstínem stínu
             option_surface = self.font_option.render(option, True, color)
             option_shadow = self.font_option.render(option, True, self.shadow_color)
-            option_rect = option_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+            option_rect = option_surface.get_rect(center=(MENU_WIDTH // 2, MENU_HEIGHT // 2 + index * 60))
             
             screen.blit(option_shadow, option_rect.move(3, 3))
             screen.blit(option_surface, option_rect)
@@ -75,7 +75,7 @@ class DifficultyMenu:
             if event.type == pygame.MOUSEMOTION:
                 mouse_x, mouse_y = event.pos
                 for index in range(len(self.options)):
-                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(MENU_WIDTH // 2, MENU_HEIGHT // 2 + index * 60))
                     if option_rect.collidepoint(mouse_x, mouse_y):
                         self.selected_option = index  # Nastavení vybrané možnosti na základě pozice myši
             # Zpracování kliknutí myší
@@ -83,7 +83,7 @@ class DifficultyMenu:
                 if event.button == 1:  # Levé tlačítko myši
                     mouse_x, mouse_y = event.pos
                     for index in range(len(self.options)):
-                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(MENU_WIDTH // 2, MENU_HEIGHT // 2 + index * 60))
                         if option_rect.collidepoint(mouse_x, mouse_y):
                             self.selected_option = index  # Nastavení vybrané možnosti na základě kliknutí myši
                             return self.selected_option  # Potvrzení výběru
@@ -118,6 +118,7 @@ def main(debug=False):
     global logger
     # Inicializace hry (obrazovka, šachovnice, logger, časovač, obrázky, fonty)
     screen, board, logger, clock, images, font = init_game(debug)
+    screen = pygame.display.set_mode((MENU_WIDTH, MENU_HEIGHT), pygame.RESIZABLE)  # Povolíme změnu velikosti okna
 
     pygame.display.set_caption("Chess - Single Player")  # Nastavení názvu okna
 
@@ -130,6 +131,7 @@ def main(debug=False):
             break  # Pokud je zvoleno 'Exit', ukončí se hlavní smyčka
 
         logger.debug("Entering game loop")
+        screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
         # Vytvoření nové hry s vybranou obtížností pro AI
         game = Game(screen, board, images, font)
