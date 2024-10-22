@@ -3,11 +3,11 @@ from common import *
 
 def main(debug=False):
     global logger
-    screen, board, logger, clock, images, font = init_game(debug)
+    screen, board, logger, clock, images = init_game(debug)
 
     pygame.display.set_caption("Chess - local multiplayer")
 
-    game = Game(screen, board, images, font)
+    game = Game(screen, board, images)
 
     logger.debug("Entering game loop")
     run = True

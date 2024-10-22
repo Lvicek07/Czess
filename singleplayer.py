@@ -117,7 +117,7 @@ def selecting_difficulty(screen: pygame.Surface):
 def main(debug=False):
     global logger
     # Inicializace hry (obrazovka, šachovnice, logger, časovač, obrázky, fonty)
-    screen, board, logger, clock, images, font = init_game(debug)
+    screen, board, logger, clock, images = init_game(debug)
     screen = pygame.display.set_mode((MENU_WIDTH, MENU_HEIGHT), pygame.RESIZABLE)  # Povolíme změnu velikosti okna
 
     pygame.display.set_caption("Chess - Single Player")  # Nastavení názvu okna
@@ -134,7 +134,7 @@ def main(debug=False):
         screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
         # Vytvoření nové hry s vybranou obtížností pro AI
-        game = Game(screen, board, images, font)
+        game = Game(screen, board, images)
         game.players["black"] = AI(chess.BLACK, selected_difficulty)
 
         run = True

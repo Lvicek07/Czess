@@ -9,7 +9,7 @@ import io
 import os
 
 class Game:
-    def __init__(self, screen: pygame.Surface, board: chess.Board, images: dict[str, str], font: pygame.font.Font) -> None:
+    def __init__(self, screen: pygame.Surface, board: chess.Board, images: dict[str, str]) -> None:
         logger.debug("Initializing Game logic")
         self.board     = board
         self.players   = {"white": Player(chess.WHITE), "black": Player(chess.BLACK)}
@@ -18,7 +18,6 @@ class Game:
         self.game_end  = False
         self.move_num  = 1
         self.images    = images
-        self.font      = font
         self.screen    = screen
     def loop(self, events: tuple[pygame.event.Event, ...], multiplayer=None) -> None:
         if not self.game_end:
@@ -45,15 +44,15 @@ class Game:
                 self.game_state = f"Game ended: {self.board.outcome().result}"
                 self.game_end = True
 
-        self.screen.blit(self.font.render(self.game_state, True, FONT_COLOR), (660,0))
+        self.screen.blit(FONT.render(self.game_state, True, FONT_COLOR), (710,0))
         try:
             if self.board.peek() != self.last_move:
                 self.last_move = self.board.peek()
                 self.moves[self.move_num] = self.last_move
                 self.move_num += 1
-            print_game_log(self.screen, self.font, self.moves)
         except IndexError:
-            self.screen.blit(self.font.render("No moves", True, FONT_COLOR), (660,FONT_SIZE+5))
+            pass
+        print_game_log(self.screen, self.moves)
 
 
 class Menu:
@@ -349,11 +348,9 @@ def init_game(debug=False) -> tuple[pygame.Surface, chess.Board, log.Logger, pyg
     logger.debug("Initializing frame limiter")
     clock = pygame.time.Clock()
 
-    logger.debug("Initializing font")
-    font = pygame.font.SysFont('consolas', FONT_SIZE)
     logger.debug("Loading images")
     images = load_images(debug)
-    return screen, board, logger, clock, images, font
+    return screen, board, logger, clock, images
 
 def load_images(debug=False) -> Dict[str, pygame.Surface]:
     images = {}
@@ -370,6 +367,11 @@ def load_images(debug=False) -> Dict[str, pygame.Surface]:
                     img = pygame.transform.scale(img, (SQUARE_SIZE-(IMAGE_OFFSET*2), SQUARE_SIZE-(IMAGE_OFFSET*2)))
                 images[f"{color}_{piece}"] = img
                 logger.debug(f"Succesfully loaded {color}_{piece}")
+
+        img = pygame.image.load(f"assets/ChessBoard.png")
+        #img = pygame.transform.scale(img, (600, 600))
+        images["chess_board"] = img
+        logger.debug("Succesfully loaded chess_board")
                     
         return images
     else:    
@@ -405,49 +407,13 @@ def draw_piece(piece: chess.Piece, screen: pygame.Surface, pos: tuple[int, int],
 
     screen.blit(img, (x, y))
 
-def draw_square_overlay(screen: pygame.Surface, row: int, col: int, images: Dict[str, pygame.Surface]) -> None:
-    if (row + col) % 2 == 1:
-        screen.blit(images["black_square"], (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
-    else:
-        screen.blit(images["white_square"], (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
+def draw_square_overlay(screen: pygame.Surface, row: int, col: int) -> None:
     pygame.draw.rect(screen, (128, 255, 128), (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE), width=15)
 
 def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player, Player], images: Dict[str, pygame.Surface]) -> None:
     legal_moves = None
     screen.fill(EGGSHELL)
-    for row in range(ROWS):
-        for col in range(COLS):
-            if (row + col) % 2 == 1:
-                screen.blit(images["black_square"], (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
-            else:
-                screen.blit(images["white_square"], (col * SQUARE_SIZE+50, row * SQUARE_SIZE+50, SQUARE_SIZE, SQUARE_SIZE))
-    for row in range(ROWS):
-        if row % 2 == 1:
-            square_color = (255, 255, 255)
-            text_color   = (0, 0, 0)
-        else:
-            square_color = (0, 0, 0)
-            text_color   = (255, 255, 255)
-        pygame.draw.rect(screen, square_color, (0, row * SQUARE_SIZE+50, 50, SQUARE_SIZE))
-        text = FONT.render(chess.RANK_NAMES[row], True, text_color)
-        x = 0 + SQUARE_SIZE//2 - FONT.size(chess.RANK_NAMES[row])[0]//1.5
-        y = row * SQUARE_SIZE+50 + SQUARE_SIZE//2
-        rect = text.get_rect(center=(x, y))
-        screen.blit(text, rect)
-    for col in range(COLS):
-        if col % 2 == 1:
-            square_color = (255, 255, 255)
-            text_color   = (0, 0, 0)
-        else:
-            square_color = (0, 0, 0)
-            text_color   = (255, 255, 255)
-        pygame.draw.rect(screen, square_color, (col * SQUARE_SIZE+50, 0, SQUARE_SIZE, 50))
-        text = FONT.render(chess.FILE_NAMES[col].upper(), True, text_color)
-        x = col * SQUARE_SIZE+50 + SQUARE_SIZE//1.5 - FONT.size(chess.FILE_NAMES[col].upper())[0]//1.5
-        y = 0 + SQUARE_SIZE//2 - FONT.size(chess.FILE_NAMES[col])[1]//2
-        rect = text.get_rect(center=(x, y))
-        screen.blit(text, rect)
-    pygame.draw.rect(screen, (255, 255, 255), (0, 0, 50, 50))
+    screen.blit(images["chess_board"], (0, 0))
 
     if board.turn == chess.WHITE:
         if players[0].selected_piece:
@@ -466,7 +432,7 @@ def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player
         for move in legal_moves:
             row = 7 - chess.square_rank(move.to_square)
             col = chess.square_file(move.to_square)
-            draw_square_overlay(screen, row, col, images)
+            draw_square_overlay(screen, row, col)
 
     x = 0
     y = 0
@@ -481,7 +447,7 @@ def draw_board(board: chess.Board, screen: pygame.Surface, players: tuple[Player
             draw_piece(piece, screen, (x, y), images)
             x += 1
 
-def print_game_log(screen: pygame.Surface, font: pygame.font.Font, moves: Dict[int, chess.Move]) -> None:
+def print_game_log(screen: pygame.Surface, moves: Dict[int, chess.Move]) -> None:
     if moves:
         if len(moves) > 15:
             moves = dict(list(moves.items())[-15:])
@@ -489,12 +455,14 @@ def print_game_log(screen: pygame.Surface, font: pygame.font.Font, moves: Dict[i
         n = 1
         for index, move in moves.items():
             text = f"{index}. {move.uci()}"
-            screen.blit(font.render(text, True, FONT_COLOR), (660,x))
+            screen.blit(FONT.render(text, True, FONT_COLOR), (710,x))
             x += FONT_SIZE + 5
             n += 1
+    else:
+        screen.blit(FONT.render("No moves", True, FONT_COLOR), (710,FONT_SIZE+5))
 
 pygame.font.init()
-WIDTH, HEIGHT   = 1100, 650 # 600 x 600 herní pole
+WIDTH, HEIGHT   = 1200, 700 # 600 x 600 herní pole
 MENU_WIDTH, MENU_HEIGHT = 800, 600
 SQUARE_SIZE     = 600 // 8  # 75
 IMAGE_OFFSET    = 2         # Image size = 71x71

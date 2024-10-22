@@ -17,7 +17,7 @@ def get_ip_address():
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
 
-def wait_for_connection(screen: pygame.Surface, server_socket: socket.socket, font: pygame.font.Font):
+def wait_for_connection(screen: pygame.Surface, server_socket: socket.socket):
     run = True
     while run:
         try:
@@ -35,25 +35,25 @@ def wait_for_connection(screen: pygame.Surface, server_socket: socket.socket, fo
                 logger.info("Exiting")
                 raise SystemExit
         screen.fill(WHITE)
-        title_surface = font.render(f"Server started, waiting for Player 2", True, FONT_COLOR)
+        title_surface = FONT.render(f"Server started, waiting for Player 2", True, FONT_COLOR)
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
         screen.blit(title_surface, title_rect)
-        title_surface = font.render(f"IP: {get_ip_address()}", True, FONT_COLOR)
+        title_surface = FONT.render(f"IP: {get_ip_address()}", True, FONT_COLOR)
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 1.2))
         screen.blit(title_surface, title_rect)
         pygame.display.flip()
 
     screen.fill(WHITE)
-    title_surface = font.render(f"Player 2 connected from {addr}", True, FONT_COLOR)
+    title_surface = FONT.render(f"Player 2 connected from {addr}", True, FONT_COLOR)
     title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
     screen.blit(title_surface, title_rect)
     pygame.display.flip()
-    return conn, addr
+    return conn
 
 
 def main(debug=False):
     global logger
-    screen, board, logger, clock, images, font = init_game(debug)
+    screen, board, logger, clock, images = init_game(debug)
 
     pygame.display.set_caption("Chess - LAN multiplayer - server")
 
@@ -62,11 +62,11 @@ def main(debug=False):
     server_socket.listen(1)
     server_socket.settimeout(0.25)  # Set timeout of 1 second
 
-    conn, addr = wait_for_connection(screen, server_socket, font)
+    conn = wait_for_connection(screen, server_socket)
 
     logger.debug("Entering game loop")
 
-    game = Game(screen, board, images, font)
+    game = Game(screen, board, images)
 
     run = True
     while run:

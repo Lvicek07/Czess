@@ -17,16 +17,16 @@ def connect_to_server(server_ip: str):
     print(f"Connected to the server at {server_ip}:{PORT}")
     return conn
 
-def ip_input(screen, font):
-    textinput = pygame_textinput.TextInputVisualizer(font_object=font)
+def ip_input(screen):
+    textinput = pygame_textinput.TextInputVisualizer(font_object=FONT)
     clock = pygame.time.Clock()
     run = True
     while run:
         screen.fill(EGGSHELL)
-        title_surface = font.render(f"Waiting for IP", True, FONT_COLOR)
+        title_surface = FONT.render(f"Waiting for IP", True, FONT_COLOR)
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
         screen.blit(title_surface, title_rect)
-        title_surface = font.render(f"IP: ", True, FONT_COLOR)
+        title_surface = FONT.render(f"IP: ", True, FONT_COLOR)
         title_rect = title_surface.get_rect(center=(WIDTH // 2-150, HEIGHT // 2))
         screen.blit(title_surface, title_rect)
 
@@ -51,7 +51,7 @@ def ip_input(screen, font):
         else: 
             pygame.draw.rect(screen, (100,100,100), [WIDTH/2 + 150, HEIGHT/2-18, 140, 40])
 
-        text = font.render('Connect' , True , FONT_COLOR)
+        text = FONT.render('Connect' , True , FONT_COLOR)
         screen.blit(text, text.get_rect(center=(WIDTH // 2 + 70 + 150, HEIGHT // 2))) 
 
         pygame.display.update()
@@ -61,13 +61,13 @@ def ip_input(screen, font):
 
 def main(debug=False):
     global logger
-    screen, board, logger, clock, images, font = init_game(debug)
+    screen, board, logger, clock, images = init_game(debug)
 
     pygame.display.set_caption("Chess - LAN multiplayer - client")
 
-    game = Game(screen, board, images, font)
+    game = Game(screen, board, images)
 
-    SERVER_IP = ip_input(screen, font)
+    SERVER_IP = ip_input(screen)
 
     conn = connect_to_server(SERVER_IP)
     while True:
