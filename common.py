@@ -19,6 +19,7 @@ class Game:
         self.move_num  = 1
         self.images    = images
         self.screen    = screen
+        self.game_end_menu = GameEndMenu(None)
     def loop(self, events: tuple[pygame.event.Event, ...], multiplayer=None) -> None:
         if not self.game_end:
             if multiplayer == "client":
@@ -42,17 +43,20 @@ class Game:
             if self.board.outcome() != None:
                 #print("Game ended: ", self.board.outcome())
                 self.game_state = f"Game ended: {self.board.outcome().result}"
+                self.game_end_menu.state = self.game_state
                 self.game_end = True
 
-        self.screen.blit(FONT.render(self.game_state, True, FONT_COLOR), (710,0))
-        try:
-            if self.board.peek() != self.last_move:
-                self.last_move = self.board.peek()
-                self.moves[self.move_num] = self.last_move
-                self.move_num += 1
-        except IndexError:
-            pass
-        print_game_log(self.screen, self.moves)
+            self.screen.blit(FONT.render(self.game_state, True, FONT_COLOR), (710,0))
+            try:
+                if self.board.peek() != self.last_move:
+                    self.last_move = self.board.peek()
+                    self.moves[self.move_num] = self.last_move
+                    self.move_num += 1
+            except IndexError:
+                pass
+            print_game_log(self.screen, self.moves)
+        else:
+            self.game_end_menu.loop()
 
 
 class Menu:
@@ -60,34 +64,27 @@ class Menu:
         self.options          = None
         self.title            = None
         self.selected_option  = 0
-        self.font_title       = pygame.font.Font(None, 64)
-        self.font_option      = pygame.font.Font(None, 50)
-        self.font_help        = pygame.font.Font(None, 30)
-        self.shadow_color     = (128, 119, 97)
-        self.highlight_color  = (187, 250, 245)
-        self.font_color       = (130, 179, 175)
-        self.background_color = (222, 210, 177)
 
     def draw(self, screen: pygame.Surface):
-        screen.fill(self.background_color)
+        screen.fill(BACKGROUND_COLOR)
 
-        title_surface = self.font_title.render(self.title, True, self.font_color)
-        title_shadow = self.font_title.render(self.title, True, self.shadow_color)
+        title_surface = FONT_TITLE.render(self.title, True, FONT_COLOR)
+        title_shadow = FONT_TITLE.render(self.title, True, SHADOW_COLOR)
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 8))
         screen.blit(title_shadow, title_rect.move(3, 3))
         screen.blit(title_surface, title_rect)
 
-        help_surface = self.font_help.render("| Press Enter to choose |", True, self.font_color)
+        help_surface = FONT_HELP.render("| Press Enter to choose |", True, FONT_COLOR)
         help_rect = help_surface.get_rect(center=(WIDTH // 2, HEIGHT // 1.15))
         screen.blit(help_surface, help_rect)
 
         for index, option in enumerate(self.options):
             if index == self.selected_option:
-                color = self.highlight_color
+                color = HIGHLIGHT_COLOR
             else:
-                color = self.font_color
-            option_surface = self.font_option.render(option, True, color)
-            option_shadow = self.font_option.render(option, True, self.shadow_color)
+                color = FONT_COLOR
+            option_surface = FONT_OPTION.render(option, True, color)
+            option_shadow = FONT_OPTION.render(option, True, SHADOW_COLOR)
             option_rect = option_surface.get_rect(center=(WIDTH // 2, HEIGHT // 3 + index * 60))
 
             screen.blit(option_shadow, option_rect.move(3, 3))
@@ -110,14 +107,14 @@ class Menu:
             elif event.type == pygame.MOUSEMOTION:
                 mouse_x, mouse_y = event.pos
                 for index in range(len(self.options)):
-                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 3 + index * 60))
+                    option_rect = FONT_OPTION.render(self.options[index], True, FONT_COLOR).get_rect(center=(WIDTH // 2, HEIGHT // 3 + index * 60))
                     if option_rect.collidepoint(mouse_x, mouse_y):
                         self.selected_option = index
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     mouse_x, mouse_y = event.pos
                     for index in range(len(self.options)):
-                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
+                        option_rect = FONT_OPTION.render(self.options[index], True, FONT_COLOR).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
                         if option_rect.collidepoint(mouse_x, mouse_y):
                             self.selected_option = index
                             return self.selected_option
@@ -135,6 +132,12 @@ class DifficultyMenu(Menu):
         super().__init__()
         self.options = ["Easy", "Medium", "Hard", "Fales", "Exit"]
         self.title = "ŠLACH - Singleplayer Menu"
+
+class GameEndMenu:
+    def __init__(self, state: chess.Outcome):
+        self.state = state
+    def loop():
+        pass
 
 
 class Player:
@@ -468,7 +471,13 @@ SQUARE_SIZE     = 600 // 8  # 75
 IMAGE_OFFSET    = 2         # Image size = 71x71
 ROWS, COLS      = 8, 8
 WHITE           = (255, 255, 255)
-MOSS_GREEN      = (119, 149, 86)
+FONT_TITLE      = pygame.font.Font(None, 64)
+FONT_OPTION     = pygame.font.Font(None, 50)
+FONT_HELP       = pygame.font.Font(None, 30)
+SHADOW_COLOR    = (128, 119, 97)
+HIGHLIGHT_COLOR = (187, 250, 245)
+FONT_COLOR      = (130, 179, 175)
+BACKGROUND_COLOR= (222, 210, 177)
 EGGSHELL        = (235, 236, 208)
 BLACK           = (0, 0, 0)
 FONT_COLOR      = BLACK
