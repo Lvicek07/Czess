@@ -18,6 +18,13 @@ def get_ip_address():
     return s.getsockname()[0]
 
 def wait_for_connection(screen: pygame.Surface, server_socket: socket.socket):
+    font_title       = pygame.font.Font(None, 64)
+    font_option      = pygame.font.Font(None, 50)
+    font_help        = pygame.font.Font(None, 30)
+    shadow_color     = (128, 119, 97)
+    highlight_color  = (187, 250, 245)
+    font_color       = (130, 179, 175)
+    background_color = (222, 210, 177)
     run = True
     while run:
         try:
@@ -34,18 +41,24 @@ def wait_for_connection(screen: pygame.Surface, server_socket: socket.socket):
             if event.type == pygame.QUIT:
                 logger.info("Exiting")
                 raise SystemExit
-        screen.fill(WHITE)
-        title_surface = FONT.render(f"Server started, waiting for Player 2", True, FONT_COLOR)
+        screen.fill(background_color)
+        title_surface = font_title.render("Server started, waiting for Player 2", True, font_color)
+        title_shadow = font_title.render("Server started, waiting for Player 2", True, shadow_color)
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
+        screen.blit(title_shadow, title_rect.move(3, 3))
         screen.blit(title_surface, title_rect)
-        title_surface = FONT.render(f"IP: {get_ip_address()}", True, FONT_COLOR)
+        title_surface = font_option.render(f"IP: {get_ip_address()}", True, font_color)
+        title_shadow = font_option.render(f"IP: {get_ip_address()}", True, shadow_color)
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 1.2))
+        screen.blit(title_shadow, title_rect.move(3, 3))
         screen.blit(title_surface, title_rect)
         pygame.display.flip()
 
     screen.fill(WHITE)
-    title_surface = FONT.render(f"Player 2 connected from {addr}", True, FONT_COLOR)
+    title_surface = font_help.render(f"Player 2 connected from {addr}", True, highlight_color)
+    title_shadow = font_help.render(f"Player 2 connected from {addr}", True, shadow_color)
     title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4))
+    screen.blit(title_shadow, title_rect.move(3, 3))
     screen.blit(title_surface, title_rect)
     pygame.display.flip()
     return conn
