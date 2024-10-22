@@ -15,7 +15,9 @@ for piece in pieces:
         img_path = os.path.join(assets_dir, piece, f"{color}.png")
         with open(img_path, "rb") as f:
             images[f"{color}_{piece}"] = base64.b64encode(f.read()).decode('utf-8')
-
+img_path = os.path.join(assets_dir, "ChessBoard.png")
+with open(img_path, "rb") as f:
+    images["chess_board"] = base64.b64encode(f.read()).decode('utf-8')
 with open("images_b64.txt", "w") as f:
     for key, value in images.items():
         f.write(f"\t'{key}': '{value}',\n")

@@ -397,7 +397,19 @@ def load_images(debug=False) -> Dict[str, pygame.Surface]:
                     logger.debug("Succesfully loaded error image")
                 else:
                     logger.debug(f"Succesfully loaded {color}_{piece}")
-                    
+        try:
+            img_b64 = IMAGES[f"chess_board"]
+        except:
+            img_b64 = ERROR_IMAGE
+            logger.error(f"! Could not load image of chess board, using error image")
+        img_data = base64.b64decode(img_b64)
+        img_bytes = io.BytesIO(img_data)
+        img = pygame.image.load(img_bytes)
+        images[f"chess_board"] = img
+        if img_b64 == ERROR_IMAGE:
+            logger.debug("Succesfully loaded error image")
+        else:
+            logger.debug("Succesfully loaded chess_board")
         return images
 
 def draw_piece(piece: chess.Piece, screen: pygame.Surface, pos: tuple[int, int], piece_images: Dict[str, pygame.Surface]) -> None:
