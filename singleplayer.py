@@ -120,7 +120,7 @@ def main(debug=False):
     screen, board, logger, clock, images = init_game(debug)
     screen = pygame.display.set_mode((MENU_WIDTH, MENU_HEIGHT), pygame.RESIZABLE)  # Povolíme změnu velikosti okna
 
-    pygame.display.set_caption("Chess - Single Player")  # Nastavení názvu okna
+    pygame.display.set_caption("Czess - Single Player")  # Nastavení názvu okna
 
     # Smyčka pro opakovaný výběr obtížnosti a následné hraní
     while True:

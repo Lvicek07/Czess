@@ -77,7 +77,7 @@ def main(debug=False):
     global logger
     screen, board, logger, clock, images = init_game(debug)
 
-    pygame.display.set_caption("Chess - LAN multiplayer - client")
+    pygame.display.set_caption("Czess - LAN multiplayer - client")
 
     game = Game(screen, board, images)
 

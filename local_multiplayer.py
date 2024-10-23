@@ -5,7 +5,7 @@ def main(debug=False):
     global logger
     screen, board, logger, clock, images = init_game(debug)
 
-    pygame.display.set_caption("Chess - local multiplayer")
+    pygame.display.set_caption("Czess - local multiplayer")
 
     game = Game(screen, board, images)
 

@@ -68,7 +68,7 @@ def main(debug=False):
     global logger
     screen, board, logger, clock, images = init_game(debug)
 
-    pygame.display.set_caption("Chess - LAN multiplayer - server")
+    pygame.display.set_caption("Czess - LAN multiplayer - server")
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((SERVER_IP, PORT))

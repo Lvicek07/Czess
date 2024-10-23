@@ -43,7 +43,7 @@ def main(debug=False):
     global logger
     screen, _, logger, _, _, _ = init_game(debug)
 
-    pygame.display.set_caption("Chess - LAN multiplayer")
+    pygame.display.set_caption("Czess - LAN multiplayer")
 
     menu = LanMenu()
 

@@ -114,9 +114,8 @@ def main(debug=False):
     logger.debug("Initializing main menu")
     
     # Nastavení výchozí velikosti okna
-    initial_width, initial_height = 800, 600
-    screen = pygame.display.set_mode((initial_width, initial_height), pygame.RESIZABLE)  # Povolíme změnu velikosti okna
-    pygame.display.set_caption('Chess Game')
+    screen = pygame.display.set_mode((MENU_WIDTH, MENU_HEIGHT), pygame.RESIZABLE)  # Povolíme změnu velikosti okna
+    pygame.display.set_caption('Czess')
 
     menu = MainMenu()
 
