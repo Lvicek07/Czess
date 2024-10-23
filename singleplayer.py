@@ -114,14 +114,7 @@ class DifficultyMenu:
 
 def main(debug=False):
     global logger
-    pygame.init()  # Inicializace Pygame
-    logger = log.getLogger(__name__)
-
-    # Nastavení logování podle režimu debug
-    if debug:
-        log.basicConfig(level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
-    else:
-        log.basicConfig(level=log.WARNING, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+    screen, board, logger, clock, images = init_game(debug)
 
     logger.debug("Initializing difficulty menu")
     
@@ -155,31 +148,54 @@ def main(debug=False):
             # Logování výběru obtížnosti
             if menu_result == 0:
                 logger.info("Starting game with easy difficulty")            
-                # Zde zavolej funkci pro spuštění hry
+                selected_difficulty = "easy"
             elif menu_result == 1:
                 logger.info("Starting game with medium difficulty")
-                # Zde zavolej funkci pro spuštění hry
+                selected_difficulty = "medium"
             elif menu_result == 2:
                 logger.info("Starting game with hard difficulty")
-                # Zde zavolej funkci pro spuštění hry
+                selected_difficulty = "hard"
             elif menu_result == 3:
                 logger.info("Starting game with Fales difficulty")
-                # Zde zavolej funkci pro spuštění hry
+                selected_difficulty = "Fales"
             elif menu_result == 4:  # Return
                 import main  # Importujeme main.py pro návrat
-                main.main(debug)  # Voláme hlavní funkci v main.py
-                run = False  # Ukončíme aktuální smyčku
+                main.main()  # Voláme hlavní funkci v main.py
+            run = False  # Ukončíme aktuální smyčku
 
         if run:
             menu.draw(screen, width, height)  # Vykreslení menu
             pygame.display.update()  # Aktualizace obrazovky
+    run = True
+    while run:
+        logger.debug("Entering game loop")
+        screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        # Vytvoření nové hry s vybranou obtížností pro AI
+        game = Game(screen, board, images)
+        game.players["black"] = AI(chess.BLACK, selected_difficulty)
+        run = True
+        # Hlavní smyčka hry
+        while run:
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    run = False  # Ukončení hry, pokud je okno zavřeno
+                    pygame.quit()
+                    return  # Ukončení celého programu
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    run = False  # Ukončení aktuální hry, návrat do menu obtížností
+            game.loop(events)  # Hlavní herní smyčka
+            pygame.display.update()
+            clock.tick(60)
 
     pygame.quit()  # Ukončení Pygame
     
 
 if __name__ == "__main__":  # Kontrola spuštění skriptu
     try:
-        main()  # Spuštění hlavní funkce
+        debug = input("Enable debug mode? (y/n): ").strip().lower()
+        debug = True if debug == "y" else False
+        main(debug)  # Spuštění hlavní funkce
         logger.info("Program exited")  # Logování ukončení
     except KeyboardInterrupt:
         logger.info("User Exited")  # Logování přerušení uživatelem
