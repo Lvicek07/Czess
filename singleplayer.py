@@ -1,171 +1,189 @@
 import pygame
+import logging as log
 from common import *
-import chess
-import chess.pgn
 
-# Třída pro zobrazení a správu menu výběru obtížnosti
 class DifficultyMenu:
     def __init__(self):
-        # Definování jednotlivých možností obtížnosti
-        self.options = ["Easy", "Medium", "Hard", "Fales", "Exit"]
-        # Výchozí nastavení vybrané možnosti
-        self.selected_option = 0
-        # Inicializace fontů pro titul a možnosti
+        # Inicializace možností obtížnosti a nápověd
+        self.options = ["Easy", "Medium", "Hard", "Fales", "Return"]
+        self.help_texts = [
+            "AI do random moves..",  # Popis pro Easy
+            "AI tries to hold middle squares.",  # Popis pro Medium
+            "AI is aggressive.",  # Popis pro Hard
+            "You can pray for Fales mercy.",  # Popis pro Fales
+            "Go back to the main menu."  # Popis pro Return
+        ]
+        self.selected_option = 0  # Index aktuálně vybrané možnosti
+        # Nastavení fontů pro titulek a možnosti
         self.font_title = pygame.font.Font(None, 64)
         self.font_option = pygame.font.Font(None, 50)
-        # Definování barev pro stíny, zvýraznění a standardní text
+        self.font_help = pygame.font.Font(None, 30)
+        # Nastavení barev pro pozadí, text a možnosti
         self.shadow_color = (128, 119, 97)
         self.highlight_color = (187, 250, 245)
         self.font_color = (130, 179, 175)
-        self.background_color = (222, 210, 177)
+        self.easy_color = (0, 255, 0)  # Zelená pro Easy
+        self.medium_color = (255, 165, 0)  # Oranžová pro Medium
+        self.hard_color = (255, 0, 0)  # Červená pro Hard
+        self.fales_color = (128, 0, 128)  # Fialová pro Fales
+        self.background_color = (222, 210, 177)  # Barva pozadí
 
-    # Metoda pro vykreslení menu výběru obtížnosti
-    def draw(self, screen: pygame.Surface):
-        # Vyplnění pozadí
+    def draw(self, screen: pygame.Surface, width: int, height: int):
+        # Vyplnění obrazovky barvou pozadí
         screen.fill(self.background_color)
 
-        # Vykreslení titulu menu s odstínem stínu
-        title_surface = self.font_title.render("Select Difficulty", True, self.font_color)
-        title_shadow = self.font_title.render("Select Difficulty", True, self.shadow_color)
-        title_rect = title_surface.get_rect(center=(MENU_WIDTH // 2, MENU_HEIGHT // 4))
-        screen.blit(title_shadow, title_rect.move(3, 3))
+        # Renderování titulku
+        title_surface = self.font_title.render("Select Difficulty:", True, self.font_color)
+        title_shadow = self.font_title.render("Select Difficulty:", True, self.shadow_color)
+        title_rect = title_surface.get_rect(center=(width // 2, height // 4))
+        screen.blit(title_shadow, title_rect.move(3, 3))  # Vytvoření stínu titulku
         screen.blit(title_surface, title_rect)
 
-        # Získání pozice myši
-        mouse_x, mouse_y = pygame.mouse.get_pos()
+        # Posun nápovědy dolů, aby se nezasahovalo do položky "Return"
+        help_color = self.font_color  # Výchozí barva pro nápovědu
+        if self.options[self.selected_option] == "Fales":
+            help_color = self.fales_color  # Fialová barva pro popis Fales
 
-        # Vykreslení jednotlivých možností obtížnosti
+        help_surface = self.font_help.render(self.help_texts[self.selected_option], True, help_color)
+        help_rect = help_surface.get_rect(center=(width // 2, height // 1.07))
+        screen.blit(help_surface, help_rect)
+
+        option_height = height // (len(self.options) + 1)
+        spacing = option_height * 0.5  # Nastavení mezery mezi možnostmi
+
         for index, option in enumerate(self.options):
-            # Zvýraznění vybrané možnosti
-            if index == self.selected_option:
-                color = self.highlight_color
+            # Nastavení barvy podle vybrané možnosti
+            if option == "Easy":
+                color = self.easy_color if index == self.selected_option else self.font_color
+            elif option == "Medium":
+                color = self.medium_color if index == self.selected_option else self.font_color
+            elif option == "Hard":
+                color = self.hard_color if index == self.selected_option else self.font_color
+            elif option == "Fales":
+                color = self.fales_color if index == self.selected_option else self.font_color
+            elif option == "Return":
+                color = self.highlight_color if index == self.selected_option else self.font_color  # Zvýraznění Return
             else:
-                color = self.font_color
+                color = self.font_color  # Výchozí barva
 
-            # Vykreslení textu možnosti s odstínem stínu
+            # Renderování možnosti s efektem stínu
             option_surface = self.font_option.render(option, True, color)
             option_shadow = self.font_option.render(option, True, self.shadow_color)
-            option_rect = option_surface.get_rect(center=(MENU_WIDTH // 2, MENU_HEIGHT // 2 + index * 60))
-            
+            option_rect = option_surface.get_rect(center=(width // 2, height // 2 + index * spacing))
+
+            # Upravujeme pozici pro Return
+            if option == "Return":
+                option_rect.y += 20  # Posunout Return o 20 pixelů níže
+
+            # Zobrazení textu na obrazovce
             screen.blit(option_shadow, option_rect.move(3, 3))
             screen.blit(option_surface, option_rect)
 
-    # Metoda pro pohyb mezi možnostmi
     def move_selection(self, direction):
-        # Aktualizace vybrané možnosti pomocí cyklického pohybu
+        # Posunutí vybrané možnosti
         self.selected_option = (self.selected_option + direction) % len(self.options)
 
-    # Metoda pro zpracování uživatelského vstupu (klávesnice, myš)
-    def handle_input(self, events):
+    def handle_input(self, events, width: int, height: int):
         for event in events:
-            # Uzavření aplikace, pokud je zavřeno okno
             if event.type == pygame.QUIT:
+                log.info("Exiting")  # Logování události ukončení
                 return "exit"
-            # Zpracování vstupů z klávesnice
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    self.move_selection(-1)  # Pohyb nahoru v seznamu možností
+                    self.move_selection(-1)  # Posun nahoru
                 elif event.key == pygame.K_DOWN:
-                    self.move_selection(1)  # Pohyb dolů v seznamu možností
+                    self.move_selection(1)  # Posun dolů
                 elif event.key == pygame.K_RETURN:
-                    return self.selected_option  # Potvrzení vybrané možnosti
-                elif event.key == pygame.K_ESCAPE:
-                    return "back"  # Návrat do předchozího menu
-            # Zpracování pohybu myši
+                    return self.selected_option  # Potvrzení výběru
             if event.type == pygame.MOUSEMOTION:
                 mouse_x, mouse_y = event.pos
                 for index in range(len(self.options)):
-                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(MENU_WIDTH // 2, MENU_HEIGHT // 2 + index * 60))
+                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * (height // (len(self.options) + 1)) * 0.5))
                     if option_rect.collidepoint(mouse_x, mouse_y):
-                        self.selected_option = index  # Nastavení vybrané možnosti na základě pozice myši
-            # Zpracování kliknutí myší
+                        self.selected_option = index  # Nastavení vybrané možnosti na základě pohybu myši
+                        break
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Levé tlačítko myši
                     mouse_x, mouse_y = event.pos
                     for index in range(len(self.options)):
-                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(MENU_WIDTH // 2, MENU_HEIGHT // 2 + index * 60))
+                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * (height // (len(self.options) + 1)) * 0.5))
                         if option_rect.collidepoint(mouse_x, mouse_y):
-                            self.selected_option = index  # Nastavení vybrané možnosti na základě kliknutí myši
-                            return self.selected_option  # Potvrzení výběru
-        return None
+                            self.selected_option = index  # Nastavení vybrané možnosti na základě kliknutí
+                            return self.selected_option
+        return None  # Pokud nebyla provedena žádná akce
 
-# Funkce pro zobrazení a zpracování menu výběru obtížnosti
-def selecting_difficulty(screen: pygame.Surface):
-    menu = DifficultyMenu()
-    run = True
-    while run:
-        # Získání všech událostí (klávesnice, myš, zavření okna)
-        events = pygame.event.get()
-        menu_result = menu.handle_input(events)
-        if menu_result is not None:
-            # Pokud se uživatel rozhodne vrátit nebo ukončit hru
-            if menu_result == "back":
-                return None
-            elif menu_result == "exit":
-                return "exit"
-            # Vrátí zvolenou obtížnost
-            if 0 <= menu_result < len(menu.options) - 1:
-                return ["easy", "medium", "hard", "Fales"][menu_result]
-            else:
-                return None
-
-        # Vykreslení menu na obrazovku
-        menu.draw(screen)
-        pygame.display.update()
-
-# Hlavní funkce hry
 def main(debug=False):
     global logger
-    # Inicializace hry (obrazovka, šachovnice, logger, časovač, obrázky, fonty)
-    screen, board, logger, clock, images = init_game(debug)
-    screen = pygame.display.set_mode((MENU_WIDTH, MENU_HEIGHT), pygame.RESIZABLE)  # Povolíme změnu velikosti okna
+    pygame.init()  # Inicializace Pygame
+    logger = log.getLogger(__name__)
 
-    pygame.display.set_caption("Czess - Single Player")  # Nastavení názvu okna
+    # Nastavení logování podle režimu debug
+    if debug:
+        log.basicConfig(level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
+    else:
+        log.basicConfig(level=log.WARNING, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
 
-    # Smyčka pro opakovaný výběr obtížnosti a následné hraní
-    while True:
-        selected_difficulty = selecting_difficulty(screen)  # Volba obtížnosti
-        if selected_difficulty is None:
-            return  # Pokud je výběr zrušen, ukončí se hra
-        if selected_difficulty == "exit":
-            break  # Pokud je zvoleno 'Exit', ukončí se hlavní smyčka
+    logger.debug("Initializing difficulty menu")
+    
+    # Nastavení okna Pygame
+    screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+    pygame.display.set_caption('Czess - Difficulty Selection')  # Titulek okna
 
-        logger.debug("Entering game loop")
-        screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    menu = DifficultyMenu()  # Vytvoření instance menu
 
-        # Vytvoření nové hry s vybranou obtížností pro AI
-        game = Game(screen, board, images)
-        game.players["black"] = AI(chess.BLACK, selected_difficulty)
+    logger.debug("Entering difficulty selection loop")
+    run = True
+    while run:
+        events = pygame.event.get()  # Získání událostí
+        for event in events:
+            if event.type == pygame.QUIT:
+                logger.info("Exiting")  # Logování události ukončení
+                run = False
+                pygame.quit()  # Ukončení Pygame
+                return
 
-        run = True
-        # Hlavní smyčka hry
-        while run:
-            events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.QUIT:
-                    run = False  # Ukončení hry, pokud je okno zavřeno
-                    pygame.quit()
-                    return  # Ukončení celého programu
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    run = False  # Ukončení aktuální hry, návrat do menu obtížností
+        # Zajištění minimální velikosti okna
+        width, height = screen.get_size()
+        if width < 800 or height < 600:
+            width = max(width, 800)
+            height = max(height, 600)
+            screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
-            game.loop(events)  # Hlavní herní smyčka
+        # Zpracování vstupů a vykreslení menu
+        menu_result = menu.handle_input(events, width, height)
+        if menu_result is not None:
+            # Logování výběru obtížnosti
+            if menu_result == 0:
+                logger.info("Starting game with easy difficulty")            
+                # Zde zavolej funkci pro spuštění hry
+            elif menu_result == 1:
+                logger.info("Starting game with medium difficulty")
+                # Zde zavolej funkci pro spuštění hry
+            elif menu_result == 2:
+                logger.info("Starting game with hard difficulty")
+                # Zde zavolej funkci pro spuštění hry
+            elif menu_result == 3:
+                logger.info("Starting game with Fales difficulty")
+                # Zde zavolej funkci pro spuštění hry
+            elif menu_result == 4:  # Return
+                import main  # Importujeme main.py pro návrat
+                main.main(debug)  # Voláme hlavní funkci v main.py
+                run = False  # Ukončíme aktuální smyčku
+
+        if run:
+            menu.draw(screen, width, height)  # Vykreslení menu
             pygame.display.update()  # Aktualizace obrazovky
-            clock.tick(60)  # Nastavení FPS
 
-        # Uvolnění paměti po skončení hry
-        game = None
+    pygame.quit()  # Ukončení Pygame
+    
 
-    pygame.quit()  # Ukončení pygame po skončení celé hry
-
-# Spuštění programu
-if __name__ == "__main__":
+if __name__ == "__main__":  # Kontrola spuštění skriptu
     try:
-        # Aktivace debug režimu na základě uživatelského vstupu
-        debug = input("Enable debug mode? (y/n): ").strip().lower()
-        debug = True if debug == "y" else False
-        main(debug)  # Spuštění hlavní funkce
-        logger.info("Program exited")
+        main()  # Spuštění hlavní funkce
+        logger.info("Program exited")  # Logování ukončení
+    except KeyboardInterrupt:
+        logger.info("User Exited")  # Logování přerušení uživatelem
     except Exception as e:
-        logger.error(e)  # Logování chyby
-        raise e  # Opětovné vyvolání chyby
+        logger.error(e)  # Logování chyb
+        raise e  # Vyhození chyby
+
