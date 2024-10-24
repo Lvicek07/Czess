@@ -54,8 +54,6 @@ class Game:
             except IndexError:
                 pass
             print_game_log(self.screen, self.moves)
-        else:
-            self.game_end_menu.loop()
 
 
 class Player:
