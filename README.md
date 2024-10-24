@@ -1,11 +1,7 @@
-# Šlach
-Pár negrů dělá šachy (Šlach)
-
-* Spisovatel - Main menu, local multiplayer, LAN multiplayer, bug fixes
-* Ital - Senior grafik
-* Nasrat a Rozmazat - Singleplayer, AI a vály kol a kol
+# Czess
+Pár druháků dělá šachy (Czess)
 
 ## Inicializace repozitáře
 * git init
-* git remote add origin https://github.com/Lvicek07/Slach.git
+* git remote add origin https://github.com/Lvicek07/Czess.git
 * git pull origin feature
