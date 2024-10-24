@@ -19,7 +19,6 @@ class Game:
         self.move_num  = 1
         self.images    = images
         self.screen    = screen
-        self.game_end_menu = GameEndMenu(None)
     def loop(self, events: tuple[pygame.event.Event, ...], multiplayer=None) -> None:
         if not self.game_end:
             if multiplayer == "client":
@@ -57,87 +56,6 @@ class Game:
             print_game_log(self.screen, self.moves)
         else:
             self.game_end_menu.loop()
-
-
-class Menu:
-    def __init__(self):
-        self.options          = None
-        self.title            = None
-        self.selected_option  = 0
-
-    def draw(self, screen: pygame.Surface):
-        screen.fill(BACKGROUND_COLOR)
-
-        title_surface = FONT_TITLE.render(self.title, True, FONT_COLOR)
-        title_shadow = FONT_TITLE.render(self.title, True, SHADOW_COLOR)
-        title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 8))
-        screen.blit(title_shadow, title_rect.move(3, 3))
-        screen.blit(title_surface, title_rect)
-
-        help_surface = FONT_HELP.render("| Press Enter to choose |", True, FONT_COLOR)
-        help_rect = help_surface.get_rect(center=(WIDTH // 2, HEIGHT // 1.15))
-        screen.blit(help_surface, help_rect)
-
-        for index, option in enumerate(self.options):
-            if index == self.selected_option:
-                color = HIGHLIGHT_COLOR
-            else:
-                color = FONT_COLOR
-            option_surface = FONT_OPTION.render(option, True, color)
-            option_shadow = FONT_OPTION.render(option, True, SHADOW_COLOR)
-            option_rect = option_surface.get_rect(center=(WIDTH // 2, HEIGHT // 3 + index * 60))
-
-            screen.blit(option_shadow, option_rect.move(3, 3))
-            screen.blit(option_surface, option_rect)
-
-    def move_selection(self, direction):
-        self.selected_option = (self.selected_option + direction) % len(self.options)
-
-    def handle_input(self, events):
-        for event in events:
-            if event.type == pygame.QUIT:
-                return len(self.options)-1
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    self.selected_option = (self.selected_option - 1) % len(self.options)
-                elif event.key == pygame.K_DOWN:
-                    self.selected_option = (self.selected_option + 1) % len(self.options)
-                elif event.key == pygame.K_RETURN:
-                    return self.selected_option
-            elif event.type == pygame.MOUSEMOTION:
-                mouse_x, mouse_y = event.pos
-                for index in range(len(self.options)):
-                    option_rect = FONT_OPTION.render(self.options[index], True, FONT_COLOR).get_rect(center=(WIDTH // 2, HEIGHT // 3 + index * 60))
-                    if option_rect.collidepoint(mouse_x, mouse_y):
-                        self.selected_option = index
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    mouse_x, mouse_y = event.pos
-                    for index in range(len(self.options)):
-                        option_rect = FONT_OPTION.render(self.options[index], True, FONT_COLOR).get_rect(center=(WIDTH // 2, HEIGHT // 2 + index * 60))
-                        if option_rect.collidepoint(mouse_x, mouse_y):
-                            self.selected_option = index
-                            return self.selected_option
-        return None
-    
-
-class MainMenu(Menu):
-    def __init__(self):
-        super().__init__()
-        self.options = ["Singleplayer", "Local Multiplayer", "LAN Multiplayer", "Exit"]
-        self.title = "ŠLACH - Main Menu"
-
-class DifficultyMenu(Menu):
-    def __init__(self):
-        super().__init__()
-        self.options = ["Easy", "Medium", "Hard", "Fales", "Exit"]
-        self.title = "ŠLACH - Singleplayer Menu"
-
-class GameEndMenu:
-    def __init__(self, state: chess.Outcome):
-        self.state = state
-    def loop():
-        pass
 
 
 class Player:
@@ -333,10 +251,10 @@ class AI:
 def get_color(color: bool) -> str:
     return "white" if color==True else "black"
     
-def init_game(debug=False) -> tuple[pygame.Surface, chess.Board, log.Logger, pygame.time.Clock, Dict[str, pygame.Surface], pygame.font.Font]:
+def init_game(debug=False, name=__name__) -> tuple[pygame.Surface, chess.Board, log.Logger, pygame.time.Clock, Dict[str, pygame.Surface], pygame.font.Font]:
     global logger
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    logger = log.getLogger(__name__)
+    logger = log.getLogger(name)
     if debug:
         log.basicConfig(level=log.DEBUG, format='%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
     else:

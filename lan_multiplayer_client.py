@@ -75,7 +75,7 @@ def ip_input(screen: pygame.Surface):
 
 def main(debug=False):
     global logger
-    screen, board, logger, clock, images = init_game(debug)
+    screen, board, logger, clock, images = init_game(debug, __name__)
 
     pygame.display.set_caption("Czess - LAN multiplayer - client")
 
