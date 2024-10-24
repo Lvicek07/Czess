@@ -1,0 +1,1 @@
+pyinstaller main.py -y -F -w --add-data common.py:. --add-data lan_multiplayer_menu.py:. --add-data lan_multiplayer_client.py:. --add-data lan_multiplayer_server.py:. --add-data local_multiplayer.py:. --add-data singleplayer.py:. --clean --optimize 2
