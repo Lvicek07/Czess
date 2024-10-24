@@ -41,7 +41,7 @@ class LanMenu:
 
 def main(debug=False):
     global logger
-    screen, _, logger, _, _, _ = init_game(debug)
+    screen, _, logger, _, _ = init_game(debug)
 
     pygame.display.set_caption("Czess - LAN multiplayer")
 

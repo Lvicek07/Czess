@@ -116,6 +116,8 @@ def main(debug=False):
 
     # Close the connection when the game is over
     conn.close()
+    server_socket.close()
+    pygame.quit()
 
 
 if __name__ == "__main__":
