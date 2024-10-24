@@ -83,7 +83,7 @@ class DifficultyMenu:
         # Posunutí vybrané možnosti
         self.selected_option = (self.selected_option + direction) % len(self.options)
 
-    def handle_input(self, events, width: int, height: int):
+    def handle_input(self, events: tuple[pygame.event.Event, ...], width: int, height: int):
         for event in events:
             if event.type == pygame.QUIT:
                 log.info("Exiting")  # Logování události ukončení
@@ -98,7 +98,10 @@ class DifficultyMenu:
             if event.type == pygame.MOUSEMOTION:
                 mouse_x, mouse_y = event.pos
                 for index in range(len(self.options)):
-                    option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * (height // (len(self.options) + 1)) * 0.5))
+                    if self.options[index] == "Return":
+                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, (height // 2 + index * (height // (len(self.options) + 1)) * 0.5)+20))
+                    else:
+                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * (height // (len(self.options) + 1)) * 0.5))
                     if option_rect.collidepoint(mouse_x, mouse_y):
                         self.selected_option = index  # Nastavení vybrané možnosti na základě pohybu myši
                         break
@@ -106,7 +109,10 @@ class DifficultyMenu:
                 if event.button == 1:  # Levé tlačítko myši
                     mouse_x, mouse_y = event.pos
                     for index in range(len(self.options)):
-                        option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * (height // (len(self.options) + 1)) * 0.5))
+                        if self.options[index] == "Return":
+                            option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, (height // 2 + index * (height // (len(self.options) + 1)) * 0.5)+20))
+                        else:
+                            option_rect = self.font_option.render(self.options[index], True, self.font_color).get_rect(center=(width // 2, height // 2 + index * (height // (len(self.options) + 1)) * 0.5))
                         if option_rect.collidepoint(mouse_x, mouse_y):
                             self.selected_option = index  # Nastavení vybrané možnosti na základě kliknutí
                             return self.selected_option
