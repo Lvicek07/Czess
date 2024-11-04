@@ -7,10 +7,10 @@ class DifficultyMenu:
         # Inicializace možností obtížnosti a nápověd
         self.options = ["Easy", "Medium", "Hard", "Fales", "Return"]
         self.help_texts = [
-            "AI do random moves..",  # Popis pro Easy
+            "AI does random moves..",  # Popis pro Easy
             "AI tries to hold middle squares.",  # Popis pro Medium
             "AI is aggressive.",  # Popis pro Hard
-            "You can pray for Fales mercy.",  # Popis pro Fales
+            "You can pray for Fales's mercy.",  # Popis pro Fales
             "Go back to the main menu."  # Popis pro Return
         ]
         self.selected_option = 0  # Index aktuálně vybrané možnosti
@@ -22,10 +22,10 @@ class DifficultyMenu:
         self.shadow_color = (128, 119, 97)
         self.highlight_color = (187, 250, 245)
         self.font_color = (130, 179, 175)
-        self.easy_color = (0, 255, 0)  # Zelená pro Easy
-        self.medium_color = (255, 165, 0)  # Oranžová pro Medium
-        self.hard_color = (255, 0, 0)  # Červená pro Hard
-        self.fales_color = (128, 0, 128)  # Fialová pro Fales
+        self.easy_color = (51, 204, 51)  # Zelená pro Easy
+        self.medium_color = (227, 148, 39)  # Oranžová pro Medium
+        self.hard_color = (217, 46, 68)  # Červená pro Hard
+        self.fales_color = (149, 56, 161)  # Fialová pro Fales
         self.background_color = (222, 210, 177)  # Barva pozadí
 
     def draw(self, screen: pygame.Surface, width: int, height: int):
@@ -42,7 +42,13 @@ class DifficultyMenu:
         # Posun nápovědy dolů, aby se nezasahovalo do položky "Return"
         help_color = self.font_color  # Výchozí barva pro nápovědu
         if self.options[self.selected_option] == "Fales":
-            help_color = self.fales_color  # Fialová barva pro popis Fales
+            help_color = self.fales_color  # Fialová barva pro popisek Fales
+        elif self.options[self.selected_option] == "Easy":
+            help_color = self.easy_color  # Zelená barva pro popisek Easy
+        elif self.options[self.selected_option] == "Medium":
+            help_color = self.medium_color  # Oranžová barva pro popisek Medium
+        elif self.options[self.selected_option] == "Hard":
+            help_color = self.hard_color  # Červená barva pro popisek Hard
 
         help_surface = self.font_help.render(self.help_texts[self.selected_option], True, help_color)
         help_rect = help_surface.get_rect(center=(width // 2, height // 1.07))
