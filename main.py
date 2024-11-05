@@ -1,9 +1,3 @@
-"""
-Antoníne, když testuješ obrázky, spusť "local_multiplayer.py" a zapni debug
-Jinak se budeš muset srát s "create_images.py" a dávat to do "common.py"
-Návod máš na discordu, #faq, první zpráva
-"""
-
 import pygame
 import logging as log
 from os import chdir
