@@ -5,6 +5,7 @@ import random
 import logging as log
 import chess.pgn
 import base64
+import time
 import io
 import os
 
@@ -123,8 +124,9 @@ class AI:
         return move
 
     def easy_move(self, board: chess.Board) -> chess.Move:
-        """AI s náhodnými tahy."""
-        return random.choice(list(board.legal_moves))
+        """AI s náhodnými tahy, počká 1 vteřinu před výběrem."""
+        time.sleep(1)  # Počkejte 1 sekundu
+        return random.choice(list(board.legal_moves))  # Vybírá náhodný legální tah
 
     def medium_move(self, board: chess.Board) -> chess.Move:
         """AI prioritizující zachycení a kontrolu centrálních polí."""
