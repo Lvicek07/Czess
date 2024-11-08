@@ -1,7 +1,5 @@
-# Czess
-Pár druháků dělá šachy (Czess)
+#Czess ♟️
 
-## Inicializace repozitáře
-* git init
-* git remote add origin https://github.com/Lvicek07/Czess.git
-* git pull origin feature
+Menší Projekt šachové hry vytvořený studenty pro zábavu a spíše pro učení. Očekávejte jednoduchou hru bez velkých ambicí.
+
+Toť asi zatím vše..
