@@ -1,0 +1,36 @@
+/// EXE //
+# 1. Only paste this in terminal.. (what a lucky life to have a windows)
+pyinstaller main.py -y -F -w --add-data common.py:. --add-data lan_multiplayer_menu.py:. --add-data lan_multiplayer_client.py:. --add-data lan_multiplayer_server.py:. --add-data local_multiplayer.py:. --add-data singleplayer.py:. --clean --optimize 2
+
+/// APPIMAGE ///
+# 1. Build the binary using PyInstaller
+pyinstaller main.py -y -F -w --add-data common.py:. --add-data lan_multiplayer_menu.py:. \
+--add-data lan_multiplayer_client.py:. --add-data lan_multiplayer_server.py:. \
+--add-data local_multiplayer.py:. --add-data singleplayer.py:. --clean --optimize 2
+
+# 2. Create the basic AppDir structure
+mkdir -p dist/AppDir/usr/bin
+mkdir -p dist/AppDir/usr/share/applications
+mkdir -p dist/AppDir/usr/share/icons/hicolor/256x256/apps
+
+# 3. Move the binary created by PyInstaller to AppDir
+cp dist/main dist/AppDir/usr/bin/
+
+# 4. Create the .desktop file
+cat <<EOF > dist/AppDir/usr/share/applications/czess.desktop
+[Desktop Entry]
+Version=1.0
+Name=Czess
+Comment=Chess on Python
+Exec=main
+Icon=czess-icon
+Terminal=false
+Type=Application
+Categories=Game;
+EOF
+
+# 5. Add the icon to AppDir (replace 'path/to/czess-icon.png' with the actual path to your icon)
+cp path/to/czess-icon.png dist/AppDir/usr/share/icons/hicolor/256x256/apps/czess-icon.png
+
+# 6. Create the AppImage using linuxdeploy
+./linuxdeploy-x86_64.AppImage --appdir dist/AppDir --output appimage
