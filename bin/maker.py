@@ -1,7 +1,7 @@
 import os
-import subprocess
-import sys
 import shutil
+import sys
+import PyInstaller.__main__
 
 def get_valid_directory(prompt):
     """Prompt the user to enter a directory path and validate it."""
@@ -30,11 +30,13 @@ def locate_icon(base_dir):
     return icon_path
 
 def build_exe(base_dir, output_dir):
-    """Build an EXE using PyInstaller."""
+    """Build an EXE using PyInstaller's Python API."""
     print("Creating EXE for Windows...")
     try:
-        subprocess.check_call([
-            "pyinstaller", os.path.join(base_dir, "src/main.py"), "-y", "-F", "-w",
+        PyInstaller.__main__.run([
+            os.path.join(base_dir, "src/main.py"),  # Main script to bundle
+            "--onefile",  # Create a single executable
+            "--noconsole",  # Don't show the console window
             "--add-data", os.path.join(base_dir, "src/common.py") + ":.",
             "--add-data", os.path.join(base_dir, "src/lan_multiplayer_menu.py") + ":.",
             "--add-data", os.path.join(base_dir, "src/lan_multiplayer_client.py") + ":.",
@@ -49,13 +51,13 @@ def build_exe(base_dir, output_dir):
         print("EXE file has been created in the 'executable' directory.")
     except FileNotFoundError:
         print("Error: PyInstaller is not installed or not found in your PATH.")
-    except subprocess.CalledProcessError:
-        print("Error: PyInstaller failed to create the EXE.")
+    except Exception as e:
+        print(f"Error: PyInstaller failed to create the EXE. {e}")
 
 def build_appimage(base_dir, output_dir, linuxdeploy_path):
     """Build an AppImage for Linux."""
     print("Creating AppImage for Linux...")
-    
+
     # Ensure linuxdeploy is executable
     os.chmod(linuxdeploy_path, 0o755)
 
@@ -64,8 +66,8 @@ def build_appimage(base_dir, output_dir, linuxdeploy_path):
 
     # Build binary with PyInstaller
     try:
-        subprocess.check_call([
-            "pyinstaller", os.path.join(base_dir, "src/main.py"), "-y", "-F", "-w",
+        PyInstaller.__main__.run([
+            os.path.join(base_dir, "src/main.py"), "-y", "-F", "-w",
             "--add-data", os.path.join(base_dir, "src/common.py") + ":.",
             "--add-data", os.path.join(base_dir, "src/lan_multiplayer_menu.py") + ":.",
             "--add-data", os.path.join(base_dir, "src/lan_multiplayer_client.py") + ":.",
@@ -80,8 +82,8 @@ def build_appimage(base_dir, output_dir, linuxdeploy_path):
     except FileNotFoundError:
         print("Error: PyInstaller is not installed or not found in your PATH.")
         sys.exit(1)
-    except subprocess.CalledProcessError:
-        print("Error: PyInstaller failed to create the main binary.")
+    except Exception as e:
+        print(f"Error: PyInstaller failed to create the main binary. {e}")
         sys.exit(1)
 
     # Verify if the binary was created
