@@ -1,6 +1,7 @@
 import os
 import shutil
 import sys
+import subprocess
 import PyInstaller.__main__
 
 def get_valid_directory(prompt):
