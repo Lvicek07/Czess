@@ -19,17 +19,19 @@ def check_file_path(prompt):
         path = input("Please enter a valid file path: ").strip()
     return path
 
-def locate_icon(base_dir):
-    """Attempt to locate the icon in the assets directory, or ask the user to specify it."""
-    icon_path = os.path.join(base_dir, "assets", "czess-icon.png")
+def locate_icon(base_dir, is_exe=False):
+    """Attempt to locate the icon in the assets directory, or ask the user to specify it.
+       If building EXE, ensure icon is .ico format."""
+    icon_path = os.path.join(base_dir, "assets", "czess-icon.ico" if is_exe else "czess-icon.png")
+    
     if os.path.isfile(icon_path):
         print(f"Icon found at: {icon_path}")
     else:
         print("Icon not found in the assets directory.")
-        icon_path = check_file_path("Please provide the full path to the icon (e.g., czess-icon.png): ")
+        icon_path = check_file_path("Please provide the full path to the icon (e.g., czess-icon.ico or czess-icon.png): ")
     return icon_path
 
-def build_exe(base_dir, output_dir):
+def build_exe(base_dir, output_dir, icon_path):
     """Build an EXE using PyInstaller's Python API."""
     print("Creating EXE for Windows...")
     try:
@@ -46,7 +48,9 @@ def build_exe(base_dir, output_dir):
             "--distpath", output_dir,  # Save the output to the `executable` directory
             "--workpath", os.path.join(output_dir, "build"),
             "--specpath", output_dir,
-            "--clean", "--optimize", "2"
+            "--clean", "--optimize", "2",
+            "--icon", icon_path,  # Set the icon for the EXE (expecting .ico)
+            "--name", "czess"  # Set the name of the EXE file
         ])
         print("EXE file has been created in the 'executable' directory.")
     except FileNotFoundError:
@@ -134,11 +138,14 @@ def main():
     output_dir = os.path.join(base_dir, "executable")
     os.makedirs(output_dir, exist_ok=True)
 
+    # Locate the icon (check for .ico for EXE)
+    icon_path = locate_icon(base_dir, is_exe=True)
+
     # Prompt the user to choose between EXE and AppImage
     choice = input("Do you want to create an EXE (Windows) or AppImage (Linux)? Type 'exe' or 'appimage': ").strip().lower()
 
     if choice == "exe":
-        build_exe(base_dir, output_dir)
+        build_exe(base_dir, output_dir, icon_path)
     elif choice == "appimage":
         # Prompt for the path to linuxdeploy
         linuxdeploy_path = check_file_path("Please enter the full path to linuxdeploy (e.g., linuxdeploy-x86_64.AppImage): ")
