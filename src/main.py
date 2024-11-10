@@ -109,7 +109,7 @@ def main(debug=False):
     
     # Nastavení výchozí velikosti okna
     screen = pygame.display.set_mode((MENU_WIDTH, MENU_HEIGHT), pygame.RESIZABLE)  # Povolíme změnu velikosti okna
-    pygame.display.set_caption('Czess')
+    pygame.display.set_caption('Czess - Mainmenu')
 
     menu = MainMenu()
 

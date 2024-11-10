@@ -132,7 +132,7 @@ def main(debug=False):
     
     # Nastavení okna Pygame
     screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
-    pygame.display.set_caption('Czess - Difficulty Selection')  # Titulek okna
+    pygame.display.set_caption('Czess - Singleplayer')  # Titulek okna
 
     menu = DifficultyMenu()  # Vytvoření instance menu
 
