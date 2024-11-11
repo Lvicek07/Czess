@@ -124,40 +124,84 @@ class DifficultyMenu:
                             return self.selected_option
         return None  # Pokud nebyla provedena žádná akce
 
+class PauseMenu:
+    def __init__(self):
+        # Definice možností menu pauzy
+        self.options = ["Return", "Exit"]
+        self.selected_option = 0
+        # Nastavení fontů a barev
+        self.font_option = pygame.font.Font(None, 50)
+        self.highlight_color = (187, 250, 245)
+        self.font_color = (130, 179, 175)
+        self.background_color = (50, 50, 50)  # Tmavá barva pozadí pro pauzované menu
+
+    def draw(self, screen: pygame.Surface, width: int, height: int):
+        # Vykreslení překryvného pozadí
+        overlay = pygame.Surface((width, height))
+        overlay.set_alpha(200)  # Průhlednost pozadí
+        overlay.fill(self.background_color)
+        screen.blit(overlay, (0, 0))
+
+        # Vykreslení možností menu pauzy
+        spacing = height // 10
+        for index, option in enumerate(self.options):
+            color = self.highlight_color if index == self.selected_option else self.font_color
+            option_surface = self.font_option.render(option, True, color)
+            option_rect = option_surface.get_rect(center=(width // 2, height // 2 + index * spacing))
+            screen.blit(option_surface, option_rect)
+
+    def move_selection(self, direction):
+        # Posun mezi možnostmi v menu pauzy
+        self.selected_option = (self.selected_option + direction) % len(self.options)
+
+    def handle_input(self, events: tuple[pygame.event.Event, ...]):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    self.move_selection(-1)
+                elif event.key == pygame.K_DOWN:
+                    self.move_selection(1)
+                elif event.key == pygame.K_RETURN:
+                    return self.selected_option  # Návrat vybrané možnosti
+        return None
+
 def main(debug=False):
     global logger
     screen, board, logger, clock, images = init_game(debug, __name__)
 
     logger.debug("Initializing difficulty menu")
     
-    # Nastavení okna Pygame
-    screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
-    pygame.display.set_caption('Czess - Singleplayer')  # Titulek okna
+    # Nastavení velikosti okna a minimální velikosti
+    screen = pygame.display.set_mode((960, 700), pygame.RESIZABLE)
+    pygame.display.set_caption('Czess - Singleplayer')
+    pygame.display.set_mode((960, 700), pygame.RESIZABLE)  # Nastavení minimální velikosti okna
 
-    menu = DifficultyMenu()  # Vytvoření instance menu
-
-    logger.debug("Entering difficulty selection loop")
+    # Nastavení minimální velikosti okna
+    pygame.display.set_mode((960, 700), pygame.RESIZABLE)
+    
+    menu = DifficultyMenu()
     run = True
+    selected_difficulty = None
+    paused = False
+    pause_menu = PauseMenu()  # Vytvoření instance pauzovacího menu
+
     while run:
-        events = pygame.event.get()  # Získání událostí
+        events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
-                logger.info("Exiting")  # Logování události ukončení
+                logger.info("Exiting")
                 run = False
-                pygame.quit()  # Ukončení Pygame
+                pygame.quit()
                 return
 
-        # Zajištění minimální velikosti okna
         width, height = screen.get_size()
-        if width < 800 or height < 600:
-            width = max(width, 800)
-            height = max(height, 600)
+        if width < 960 or height < 700:
+            width = max(width, 960)
+            height = max(height, 700)
             screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
-        # Zpracování vstupů a vykreslení menu
         menu_result = menu.handle_input(events, width, height)
         if menu_result is not None:
-            # Logování výběru obtížnosti
             if menu_result == 0:
                 logger.info("Starting game with easy difficulty")            
                 selected_difficulty = "easy"
@@ -170,37 +214,49 @@ def main(debug=False):
             elif menu_result == 3:
                 logger.info("Starting game with Fales difficulty")
                 selected_difficulty = "Fales"
-            elif menu_result == 4:  # Return
-                import main  # Importujeme main.py pro návrat
-                main.main()  # Voláme hlavní funkci v main.py
-            run = False  # Ukončíme aktuální smyčku
+            elif menu_result == 4:
+                import main
+                main.main()
+            run = False
 
         if run:
-            menu.draw(screen, width, height)  # Vykreslení menu
-            pygame.display.update()  # Aktualizace obrazovky
-    run = True
-    while run:
-        logger.debug("Entering game loop")
-        screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        # Vytvoření nové hry s vybranou obtížností pro AI
-        game = Game(screen, board, images)
-        game.players["black"] = AI(chess.BLACK, selected_difficulty)
-        run = True
-        # Hlavní smyčka hry
-        while run:
-            events = pygame.event.get()
-            for event in events:
-                if event.type == pygame.QUIT:
-                    run = False  # Ukončení hry, pokud je okno zavřeno
-                    pygame.quit()
-                    return  # Ukončení celého programu
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    run = False  # Ukončení aktuální hry, návrat do menu obtížností
-            game.loop(events)  # Hlavní herní smyčka
+            menu.draw(screen, width, height)
             pygame.display.update()
-            clock.tick(60)
 
-    pygame.quit()  # Ukončení Pygame
+    run = True
+    game = Game(screen, board, images)
+    game.players["black"] = AI(chess.BLACK, selected_difficulty)
+
+    while run:
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                return
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    run = False
+                elif event.key == pygame.K_TAB:
+                    paused = not paused  # Pauza hry při stisknutí Tab
+
+        if paused:
+            pause_result = pause_menu.handle_input(events)
+            if pause_result == 0:  # Return
+                paused = False  # Návrat do hry
+            elif pause_result == 1:  # Exit
+                run = False  # Ukončení hry
+                pygame.quit()
+                return
+
+            pause_menu.draw(screen, width, height)  # Vykreslení pauzovacího menu
+        else:
+            game.loop(events)  # Aktualizace hry
+
+        pygame.display.update()
+        clock.tick(60)
+
+    pygame.quit()
     
 
 if __name__ == "__main__":  # Kontrola spuštění skriptu
@@ -214,4 +270,3 @@ if __name__ == "__main__":  # Kontrola spuštění skriptu
     except Exception as e:
         logger.error(e)  # Logování chyb
         raise e  # Vyhození chyby
-
