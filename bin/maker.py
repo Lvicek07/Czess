@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import PyInstaller.__main__
+import platform
 
 def get_base_dir():
     """Return the base directory one level up from the 'bin' directory."""
@@ -166,15 +167,24 @@ def main():
     
     icon_path = locate_icon(base_dir, is_exe=True)
 
-    choice = input("Do you want to create an EXE (Windows) or AppImage (Linux)? Type 'exe' or 'appimage': ").strip().lower()
+    system = platform.system()
 
-    if choice == "exe":
-        build_exe(base_dir, icon_path)
-    elif choice == "appimage":
+    if system == "Linux":
         linuxdeploy_path = locate_linuxdeploy(base_dir)
         build_appimage(base_dir, linuxdeploy_path)
+    elif system == "Windows":
+        build_exe(base_dir, icon_path)
     else:
-        print("Invalid choice. Please run the script again and enter 'exe' or 'appimage'.")
+        print("Cannot determine OS type")
+        choice = input("Do you want to create an EXE (Windows) or AppImage (Linux)? Type 'exe' or 'appimage': ").strip().lower()
+
+        if choice == "exe":
+            build_exe(base_dir, icon_path)
+        elif choice == "appimage":
+            linuxdeploy_path = locate_linuxdeploy(base_dir)
+            build_appimage(base_dir, linuxdeploy_path)
+        else:
+            print("Invalid choice. Please run the script again and enter 'exe' or 'appimage'.")
 
 if __name__ == "__main__":
     main()

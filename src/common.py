@@ -274,6 +274,10 @@ def init_game(debug=False, name=__name__) -> tuple[pygame.Surface, chess.Board, 
     return screen, board, logger, clock, images
 
 def load_images(debug=False) -> Dict[str, pygame.Surface]:
+    # Určte cestu k kořenovému adresáři projektu (Czess)
+    project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))  # Dva kroky zpět k Czess
+    assets_dir = os.path.join(project_dir, "assets")  # Cesta k assets složce
+
     images = {}
     pieces = ["king", "queen", "rook", "bishop", "knight", "pawn", "square"]
     colors = ["white", "black"]
@@ -281,45 +285,61 @@ def load_images(debug=False) -> Dict[str, pygame.Surface]:
     if debug:
         for piece in pieces:
             for color in colors:
-                img = pygame.image.load(f"assets/{piece}/{color}.png")
+                img_path = os.path.join(assets_dir, piece, f"{color}.png")
+                try:
+                    img = pygame.image.load(img_path)
+                except FileNotFoundError:
+                    logger.error(f"Image not found: {img_path}")
+                    continue
+                
                 if piece == "square":
                     img = pygame.transform.scale(img, (SQUARE_SIZE, SQUARE_SIZE))
                 else:
                     img = pygame.transform.scale(img, (SQUARE_SIZE-(IMAGE_OFFSET*2), SQUARE_SIZE-(IMAGE_OFFSET*2)))
+                
                 images[f"{color}_{piece}"] = img
-                logger.debug(f"Succesfully loaded {color}_{piece}")
+                logger.debug(f"Succesfully loaded {color}_{piece} from {img_path}")
 
-        img = pygame.image.load(f"assets/ChessBoard.png")
-        #img = pygame.transform.scale(img, (600, 600))
-        images["chess_board"] = img
-        logger.debug("Succesfully loaded chess_board")
+        img_path = os.path.join(assets_dir, "ChessBoard.png")
+        try:
+            img = pygame.image.load(img_path)
+            images["chess_board"] = img
+            logger.debug(f"Succesfully loaded chess_board from {img_path}")
+        except FileNotFoundError:
+            logger.error(f"Image not found: {img_path}")
                     
         return images
-    else:    
+    else:
         for piece in pieces:
             for color in colors:
                 try:
                     img_b64 = IMAGES[f"{color}_{piece}"]
-                except:
+                except KeyError:
                     img_b64 = ERROR_IMAGE
                     logger.error(f"! Could not load image of {color} {piece}, using error image")
+                
                 img_data = base64.b64decode(img_b64)
                 img_bytes = io.BytesIO(img_data)
                 img = pygame.image.load(img_bytes)
+                
                 if piece == "square":
                     img = pygame.transform.scale(img, (SQUARE_SIZE, SQUARE_SIZE))
                 else:
                     img = pygame.transform.scale(img, (SQUARE_SIZE-(IMAGE_OFFSET*2), SQUARE_SIZE-(IMAGE_OFFSET*2)))
+                
                 images[f"{color}_{piece}"] = img
                 if img_b64 == ERROR_IMAGE:
                     logger.debug("Succesfully loaded error image")
                 else:
                     logger.debug(f"Succesfully loaded {color}_{piece}")
+        
+        # Načítání chess boardu
         try:
             img_b64 = IMAGES[f"chess_board"]
-        except:
+        except KeyError:
             img_b64 = ERROR_IMAGE
             logger.error(f"! Could not load image of chess board, using error image")
+        
         img_data = base64.b64decode(img_b64)
         img_bytes = io.BytesIO(img_data)
         img = pygame.image.load(img_bytes)
@@ -328,6 +348,7 @@ def load_images(debug=False) -> Dict[str, pygame.Surface]:
             logger.debug("Succesfully loaded error image")
         else:
             logger.debug("Succesfully loaded chess_board")
+        
         return images
 
 def draw_piece(piece: chess.Piece, screen: pygame.Surface, pos: tuple[int, int], piece_images: Dict[str, pygame.Surface]) -> None:
