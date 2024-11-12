@@ -20,6 +20,15 @@ class Game:
         self.move_num  = 1
         self.images    = images
         self.screen    = screen
+
+        # Předání zvukového souboru hráčům při jejich inicializaci
+        sound_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'sounds', 'move-sound.mp3')
+        self.move_sound = pygame.mixer.Sound(sound_path)
+        
+        # Předání zvuku hráčům
+        self.players["white"].set_move_sound(self.move_sound)
+        self.players["black"].set_move_sound(self.move_sound)
+
     def loop(self, events: tuple[pygame.event.Event, ...], multiplayer=None) -> None:
         if not self.game_end:
             if multiplayer == "client":
@@ -41,7 +50,6 @@ class Game:
             draw_board(self.board, self.screen, (self.players["white"], self.players["black"]), self.images)
 
             if self.board.outcome() != None:
-                #print("Game ended: ", self.board.outcome())
                 self.game_state = f"Game ended: {self.board.outcome().result}"
                 self.game_end_menu.state = self.game_state
                 self.game_end = True
@@ -64,7 +72,12 @@ class Player:
         self.color           = color
         self.selected_piece  = None
         self.selected_square = None
+        self.move_sound      = None  # Inicializace move_sound jako None
         
+    def set_move_sound(self, move_sound: pygame.mixer.Sound) -> None:
+        """Přiřadí zvukový efekt pro pohyb do hráče."""
+        self.move_sound = move_sound
+
     def on_move(self, board: chess.Board, events: tuple[pygame.event.Event, ...]) -> None:
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -89,12 +102,21 @@ class Player:
                             if move in board.legal_moves:
                                 board.push(move)
                                 logger.debug(f"Player {get_color(self.color)} moved piece {chess.piece_name(self.selected_piece.piece_type)} from {chess.square_name(self.selected_square)} to {chess.square_name(square)}")
+                                
+                                # Přehrát zvuk po provedení tahu
+                                self.play_move_sound()
                                 self.selected_piece = None
                                 self.selected_square = None
                     elif piece:
                         if piece.color == self.color:
                             self.selected_piece = piece
                             self.selected_square = square
+
+    def play_move_sound(self):
+        """Přehrát zvuk pohybu figurky."""
+        if self.move_sound:  # Ověření, zda je zvuková soubor přiřazen
+            self.move_sound.play()
+
 
 
 class AI:
@@ -103,6 +125,7 @@ class AI:
         self.difficulty     = difficulty
         self.color          = color
         self.selected_piece = None  # Přidání atributu selected_piece
+        self.capture_sound = pygame.mixer.Sound("../assets/sounds/capture.mp3")  # Zvuk pro zachycení
 
     def on_move(self, board: chess.Board, events: tuple[pygame.event.Event, ...]) -> chess.Move:
         "DO NOT REMOVE EVENTS, Game class will parse events"
@@ -118,6 +141,8 @@ class AI:
             raise ValueError("Difficulty not selected")
 
         if move:
+            if board.is_capture(move):  # Kontrola, zda tah vede k zachycení figury
+                self.capture_sound.play()  # Přehrání zvuku pro zachycení
             board.push(move)
             self.selected_piece = None  # Reset selected_piece po tahu
             logger.debug("AI moved piece")
