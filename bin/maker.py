@@ -80,7 +80,8 @@ def build_exe(base_dir, icon_path):
             "--specpath", executable_dir,
             "--clean", "--optimize", "2",
             "--icon", icon_path,
-            "--name", "czess"
+            "--name", "czess",
+            "--log-level", "DEBUG"
         ])
         print(f"EXE file has been created and saved in: {executable_dir}")
     except Exception as e:
@@ -110,6 +111,8 @@ def build_appimage(base_dir, linuxdeploy_path):
             "--add-data", os.path.join(base_dir, "src/lan_multiplayer_server.py") + ":.",
             "--add-data", os.path.join(base_dir, "src/local_multiplayer.py") + ":.",
             "--add-data", os.path.join(base_dir, "src/singleplayer.py") + ":.",
+            "--add-data", os.path.join(base_dir, "src/capture.mp3") + ":.",
+            "--add-data", os.path.join(base_dir, "src/move-sound.mp3") + ":.",
             "--distpath", executable_dir,
             "--workpath", os.path.join(executable_dir, "build"),
             "--specpath", executable_dir,
