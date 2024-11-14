@@ -171,14 +171,10 @@ def main(debug=False):
 
     logger.debug("Initializing difficulty menu")
     
-    # Nastavení velikosti okna a minimální velikosti
+    # Nastavení velikosti okna na RESIZABLE
     screen = pygame.display.set_mode((960, 700), pygame.RESIZABLE)
     pygame.display.set_caption('Czess - Singleplayer')
-    pygame.display.set_mode((960, 700), pygame.RESIZABLE)  # Nastavení minimální velikosti okna
 
-    # Nastavení minimální velikosti okna
-    pygame.display.set_mode((960, 700), pygame.RESIZABLE)
-    
     menu = DifficultyMenu()
     run = True
     selected_difficulty = None
@@ -195,9 +191,11 @@ def main(debug=False):
                 return
 
         width, height = screen.get_size()
+
+        # Opraveno: Kontrola minimální velikosti okna a zajištění její hodnoty
         if width < 960 or height < 700:
-            width = max(width, 960)
-            height = max(height, 700)
+            width = 960
+            height = 700
             screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
         menu_result = menu.handle_input(events, width, height)
@@ -240,6 +238,13 @@ def main(debug=False):
                 elif event.key == pygame.K_TAB:
                     paused = not paused  # Pauza hry při stisknutí Tab
 
+        # Kontrola minimální velikosti okna ve hře
+        width, height = screen.get_size()
+        if width < 960 or height < 700:
+            width = 960
+            height = 700
+            screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+
         if paused:
             pause_result = pause_menu.handle_input(events)
             if pause_result == 0:  # Return
@@ -257,6 +262,7 @@ def main(debug=False):
         clock.tick(60)
 
     pygame.quit()
+
     
 
 if __name__ == "__main__":  # Kontrola spuštění skriptu
